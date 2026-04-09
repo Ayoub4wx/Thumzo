@@ -42,6 +42,7 @@ export default function StudioEditor() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [brushSize, setBrushSize] = useState(50);
   const [brushMode, setBrushMode] = useState<'brush' | 'eraser'>('brush');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -482,8 +483,8 @@ export default function StudioEditor() {
   if (editorState === 'start') {
     return (
       <div className="flex flex-col h-full overflow-y-auto bg-background text-foreground" dir="ltr">
-        <div className="max-w-5xl mx-auto w-full px-8 py-12 flex flex-col items-center">
-          <h1 className="text-2xl font-bold mb-16">Create New Thumbnail</h1>
+        <div className="max-w-5xl mx-auto w-full px-4 sm:px-8 py-8 sm:py-12 flex flex-col items-center">
+          <h1 className="text-xl sm:text-2xl font-bold mb-8 sm:mb-16">Create New Thumbnail</h1>
           
           <div className="text-center mb-8">
             <p className="text-muted-foreground mb-2">How do you want to start?</p>
@@ -492,46 +493,46 @@ export default function StudioEditor() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full mb-6">
             {/* From Image */}
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-start p-6 rounded-2xl bg-card border border-border hover:border-accent/50 transition-colors text-left group"
+              className="flex flex-col items-start p-5 sm:p-6 rounded-2xl bg-card border border-border hover:border-accent/50 transition-colors text-left group"
             >
               <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 transition-colors">
                 <ImageIcon className="w-5 h-5 text-blue-500" />
               </div>
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-xl font-bold">From Image</h3>
+                <h3 className="text-lg sm:text-xl font-bold">From Image</h3>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-500">1 Thumbnail</span>
               </div>
-              <p className="text-sm text-muted-foreground">Upload, paste YouTube URL, or pick from your asset library</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Upload, paste YouTube URL, or pick from your asset library</p>
             </button>
 
             {/* Thumbnail Sets */}
-            <button className="flex flex-col items-start p-6 rounded-2xl bg-card border border-border hover:border-accent/50 transition-colors text-left group">
+            <button className="flex flex-col items-start p-5 sm:p-6 rounded-2xl bg-card border border-border hover:border-accent/50 transition-colors text-left group">
               <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4 group-hover:bg-purple-500/20 transition-colors">
                 <Layers className="w-5 h-5 text-purple-500" />
               </div>
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-xl font-bold">Thumbnail Sets</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-500">3+ Thumbnails</span>
+                <h3 className="text-lg sm:text-xl font-bold">Thumbnail Sets</h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-500">3+</span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground">BETA</span>
               </div>
-              <p className="text-sm text-muted-foreground">Describe your thumbnail and we'll generate options for you</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Describe your thumbnail and we'll generate options for you</p>
             </button>
           </div>
 
           {/* Composition */}
-          <button className="flex flex-col items-start p-6 rounded-2xl bg-card border border-border hover:border-accent/50 transition-colors text-left w-full mb-12 group">
+          <button className="flex flex-col items-start p-5 sm:p-6 rounded-2xl bg-card border border-border hover:border-accent/50 transition-colors text-left w-full mb-8 sm:mb-12 group">
             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
               <Puzzle className="w-5 h-5 text-emerald-500" />
             </div>
             <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-xl font-bold">Composition</h3>
+              <h3 className="text-lg sm:text-xl font-bold">Composition</h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-500">Reusable Template</span>
             </div>
-            <p className="text-sm text-muted-foreground">Upload a reference thumbnail and swap out people, text, and elements</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Upload a reference thumbnail and swap out people, text, and elements</p>
           </button>
 
           {/* Quick Start */}
@@ -571,21 +572,21 @@ export default function StudioEditor() {
   }
 
   return (
-    <div className="flex h-full overflow-hidden bg-[#0a0a0a] text-white" dir="ltr">
+    <div className="flex flex-col lg:flex-row h-full overflow-hidden bg-[#0a0a0a] text-white" dir="ltr">
       {/* Main Editor Area */}
-      <div className="flex-1 flex flex-col relative">
+      <div className="flex-1 flex flex-col relative overflow-hidden">
         {/* Top Bar inside editor */}
-        <div className="h-14 flex items-center justify-between px-6">
+        <div className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-white/5 lg:border-none">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-bold">New Composition</span>
-            <span className="text-xs text-muted-foreground">just now</span>
+            <span className="text-sm font-bold truncate max-w-[120px] sm:max-w-none">New Composition</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline">just now</span>
           </div>
-          <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-full p-1 border border-white/5">
-            <button className="flex items-center gap-2 px-3 py-1 bg-[#2a2a2a] rounded-full text-xs font-medium">
-              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+          <div className="flex items-center gap-1 sm:gap-2 bg-[#1a1a1a] rounded-full p-1 border border-white/5">
+            <button className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-[#2a2a2a] rounded-full text-[10px] sm:text-xs font-medium">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500"></div>
               Main <span className="text-muted-foreground">({history.length})</span>
             </button>
-            <button className="flex items-center gap-2 px-3 py-1 text-xs font-medium text-muted-foreground hover:text-white transition-colors">
+            <button className="hidden sm:flex items-center gap-2 px-3 py-1 text-xs font-medium text-muted-foreground hover:text-white transition-colors">
               <div className="w-2 h-2 rounded-full bg-blue-500"></div>
               Branch <span className="text-muted-foreground">(1)</span>
             </button>
@@ -597,13 +598,21 @@ export default function StudioEditor() {
               <Eye className="w-4 h-4" />
             </button>
           </div>
-          <div className="w-[150px]"></div> {/* Spacer to balance */}
+          <div className="flex lg:hidden">
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 text-muted-foreground hover:text-white"
+            >
+              <Layers className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="hidden lg:block w-[150px]"></div> {/* Spacer to balance */}
         </div>
 
         {/* Canvas Area */}
-        <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden">
+        <div className="flex-1 relative flex items-center justify-center p-4 sm:p-8 overflow-hidden">
             {/* Main Image Container */}
-          <div className="relative max-w-full max-h-full aspect-video rounded-lg shadow-2xl overflow-hidden">
+          <div className="relative max-w-full max-h-full aspect-video rounded-lg shadow-2xl overflow-hidden bg-[#111]">
             <img src={currentImage || ""} alt="Canvas" className="w-full h-full object-contain rounded-lg" />
             
             {/* Grid Overlay */}
@@ -636,9 +645,9 @@ export default function StudioEditor() {
             {/* Floating Insert Button */}
             <button 
               onClick={() => insertMeRef.current?.click()}
-              className="absolute top-4 left-4 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg transition-colors z-40"
+              className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 shadow-lg transition-colors z-40"
             >
-              <ScanFace className="w-4 h-4" /> Insert Me
+              <ScanFace className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> <span className="hidden sm:inline">Insert Me</span><span className="sm:hidden">Insert</span>
             </button>
 
             {/* Generating Indicator Pill */}
@@ -648,200 +657,241 @@ export default function StudioEditor() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-4 right-4 bg-[#1A1A1A]/90 backdrop-blur-md border border-white/10 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-3 shadow-xl z-50"
+                  className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-[#1A1A1A]/90 backdrop-blur-md border border-white/10 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-sm font-medium flex items-center gap-2 sm:gap-3 shadow-xl z-50"
                 >
                   <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
+                    "w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center",
                     isPolishing ? "bg-amber-500/20" : "bg-orange-500/20"
                   )}>
                     {isPolishing ? (
-                      <Stamp className="w-3.5 h-3.5 text-amber-500" />
+                      <Stamp className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-500" />
                     ) : (
-                      <Clapperboard className="w-3.5 h-3.5 text-orange-500" />
+                      <Clapperboard className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-orange-500" />
                     )}
                   </div>
-                  {isPolishing ? "Applying Polish..." : "Applying Reshoot..."}
+                  {isPolishing ? "Polishing..." : "Reshooting..."}
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Selection Box overlay (simulated) */}
-            <div className="absolute inset-0 border border-purple-500/50 pointer-events-none"></div>
           </div>
         </div>
 
         {/* Floating Toolbar */}
-        {isEditRegionMode ? (
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#1a1a1a] p-2 rounded-2xl border border-white/10 shadow-2xl z-50">
-            <div className="flex items-center gap-1 px-2">
-              <Tooltip text="Brush">
+        <div className="px-4 pb-4">
+          {isEditRegionMode ? (
+            <div className="mx-auto flex items-center gap-1 sm:gap-2 bg-[#1a1a1a] p-1.5 sm:p-2 rounded-2xl border border-white/10 shadow-2xl z-50 overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2">
                 <button 
                   onClick={() => setBrushMode('brush')}
                   className={cn(
-                    "p-2.5 rounded-xl transition-colors",
+                    "p-2 sm:p-2.5 rounded-xl transition-colors",
                     brushMode === 'brush' ? "bg-blue-500/20 text-blue-500" : "text-muted-foreground hover:text-white hover:bg-white/5"
                   )}
                 >
-                  <Brush className="w-5 h-5" />
+                  <Brush className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
-              <Tooltip text="Eraser">
                 <button 
                   onClick={() => setBrushMode('eraser')}
                   className={cn(
-                    "p-2.5 rounded-xl transition-colors",
+                    "p-2 sm:p-2.5 rounded-xl transition-colors",
                     brushMode === 'eraser' ? "bg-blue-500/20 text-blue-500" : "text-muted-foreground hover:text-white hover:bg-white/5"
                   )}
                 >
-                  <Eraser className="w-5 h-5" />
+                  <Eraser className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
-              <div className="w-px h-6 bg-white/10 mx-2"></div>
-              <button 
-                onClick={() => setBrushSize(Math.max(10, brushSize - 10))}
-                className="p-2 text-muted-foreground hover:text-white transition-colors"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <div className="flex items-center gap-2 px-2">
-                <div className="w-3 h-3 bg-white rounded-full" style={{ transform: `scale(${brushSize / 50})` }}></div>
-                <span className="text-xs font-medium text-white w-8 text-center">{brushSize}px</span>
-              </div>
-              <button 
-                onClick={() => setBrushSize(Math.min(150, brushSize + 10))}
-                className="p-2 text-muted-foreground hover:text-white transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-              <div className="w-px h-6 bg-white/10 mx-2"></div>
-              <Tooltip text="Clear">
+                <div className="w-px h-5 sm:h-6 bg-white/10 mx-1 sm:mx-2"></div>
+                <button 
+                  onClick={() => setBrushSize(Math.max(10, brushSize - 10))}
+                  className="p-1.5 sm:p-2 text-muted-foreground hover:text-white transition-colors"
+                >
+                  <Minus className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                </button>
+                <div className="flex items-center gap-1.5 sm:gap-2 px-1 sm:px-2">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-white rounded-full" style={{ transform: `scale(${brushSize / 50})` }}></div>
+                  <span className="text-[10px] sm:text-xs font-medium text-white w-6 sm:w-8 text-center">{brushSize}px</span>
+                </div>
+                <button 
+                  onClick={() => setBrushSize(Math.min(150, brushSize + 10))}
+                  className="p-1.5 sm:p-2 text-muted-foreground hover:text-white transition-colors"
+                >
+                  <Plus className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                </button>
+                <div className="w-px h-5 sm:h-6 bg-white/10 mx-1 sm:mx-2"></div>
                 <button 
                   onClick={clearCanvas}
-                  className="p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                  className="p-2 sm:p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
-              <Tooltip text="Close">
                 <button 
                   onClick={() => {
                     setIsEditRegionMode(false);
                     clearCanvas();
                   }}
-                  className="p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                  className="p-2 sm:p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#1a1a1a] p-2 rounded-2xl border border-white/10 shadow-2xl z-50">
-            <div className="flex items-center gap-1 px-2">
-              <Tooltip text="Settings">
-                <button className="p-2.5 bg-blue-500/20 text-blue-500 rounded-xl hover:bg-blue-500/30 transition-colors">
-                  <Wrench className="w-5 h-5" />
+          ) : (
+            <div className="mx-auto flex items-center gap-1 sm:gap-2 bg-[#1a1a1a] p-1.5 sm:p-2 rounded-2xl border border-white/10 shadow-2xl z-50 overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2">
+                <button className="p-2 sm:p-2.5 bg-blue-500/20 text-blue-500 rounded-xl hover:bg-blue-500/30 transition-colors">
+                  <Wrench className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
-              <Tooltip text="Brush">
                 <button 
                   onClick={() => setIsEditRegionMode(true)}
-                  className="p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                  className="p-2 sm:p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors"
                 >
-                  <Brush className="w-5 h-5" />
+                  <Brush className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
-              <Tooltip text="Grid">
                 <button 
                   onClick={() => setShowGrid(!showGrid)}
                   className={cn(
-                    "p-2.5 rounded-xl transition-colors",
+                    "p-2 sm:p-2.5 rounded-xl transition-colors",
                     showGrid ? "bg-blue-500/20 text-blue-500" : "text-muted-foreground hover:text-white hover:bg-white/5"
                   )}
                 >
-                  <Grid className="w-5 h-5" />
+                  <Grid className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
-              <Tooltip text="Insert Me">
                 <button 
                   onClick={() => insertMeRef.current?.click()}
-                  className="p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors relative"
+                  className="p-2 sm:p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors relative"
                 >
-                  <ScanFace className="w-5 h-5" />
+                  <ScanFace className="w-4 sm:w-5 h-4 sm:h-5" />
                   {isUploading && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-[#1A1A1A]">
-                      <X className="w-2 h-2 text-white" />
+                    <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center border border-[#1A1A1A]">
+                      <X className="w-1.5 h-1.5 text-white" />
                     </div>
                   )}
                 </button>
-              </Tooltip>
-              <Tooltip text="Polish">
                 <button 
                   onClick={handlePolish}
                   disabled={isGenerating}
-                  className="p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 sm:p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Stamp className="w-5 h-5" />
+                  <Stamp className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
-              <div className="w-px h-8 bg-white/10 mx-1"></div>
-              <Tooltip text="Add Layer">
-                <button className="p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors border border-dashed border-white/20 ml-1">
-                  <Plus className="w-5 h-5" />
+                <div className="w-px h-6 sm:h-8 bg-white/10 mx-1"></div>
+                <button className="p-2 sm:p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors border border-dashed border-white/20 ml-0.5 sm:ml-1">
+                  <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
-              </Tooltip>
-              <Tooltip text="Add Effect">
-                <button className="p-2.5 text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl transition-colors border border-dashed border-white/20 ml-1">
-                  <Plus className="w-5 h-5" />
+              </div>
+
+              <div className="w-px h-6 sm:h-8 bg-white/10 mx-1 sm:mx-2"></div>
+
+              <div className="relative">
+                <button 
+                  onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#2a2a2a] hover:bg-[#333] rounded-xl text-[10px] sm:text-sm font-medium transition-colors whitespace-nowrap"
+                >
+                  <span className="max-w-[60px] sm:max-w-none truncate">{model}</span> <ChevronDown className="w-3 sm:w-4 h-3 sm:h-4 text-muted-foreground" />
                 </button>
-              </Tooltip>
+                
+                <AnimatePresence>
+                  {isModelDropdownOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute bottom-full mb-2 right-0 w-48 sm:w-56 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl overflow-hidden py-1 sm:py-2 z-[60]"
+                    >
+                      {['Google Flash 2.5', 'Google Flash 3.1', 'Google Pro 3', 'GPT Image 1.5'].map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => { setModel(m); setIsModelDropdownOpen(false); }}
+                          className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-sm hover:bg-white/5 flex items-center justify-between"
+                        >
+                          <span className={model === m ? "text-white font-medium" : "text-muted-foreground"}>{m}</span>
+                          {model === m && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <button onClick={downloadImage} className="p-2 sm:p-2.5 bg-white text-black rounded-xl hover:bg-gray-200 transition-colors ml-1 sm:ml-2">
+                <Download className="w-4 sm:w-5 h-4 sm:h-5" />
+              </button>
             </div>
+          )}
+        </div>
 
-            <div className="w-px h-8 bg-white/10 mx-2"></div>
-
-            <div className="relative">
+        {/* Prompt Area - Moved to Main Area */}
+        <div className="p-4 border-t border-white/5 bg-[#0a0a0a]">
+          {isEditRegionMode && (
+            <div className="mb-3 flex items-center justify-between bg-[#1a1a1a] border border-blue-500/30 rounded-xl p-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-blue-500 rounded-lg">
+                  <Brush className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-white">Edit Region</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground ml-1 hidden sm:inline">Paint area to edit on image</span>
+              </div>
               <button 
-                onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-[#2a2a2a] hover:bg-[#333] rounded-xl text-sm font-medium transition-colors"
+                onClick={() => setIsEditRegionMode(false)}
+                className="p-1 text-muted-foreground hover:text-white transition-colors"
               >
-                {model} <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                <X className="w-4 h-4" />
               </button>
-              
-              <AnimatePresence>
-                {isModelDropdownOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-full mb-2 right-0 w-56 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl overflow-hidden py-2"
-                  >
-                    {['Google Flash 2.5', 'Google Flash 3.1', 'Google Pro 3', 'GPT Image 1.5'].map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => { setModel(m); setIsModelDropdownOpen(false); }}
-                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 flex items-center justify-between"
-                      >
-                        <span className={model === m ? "text-white font-medium" : "text-muted-foreground"}>{m}</span>
-                        {model === m && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
-
-            <Tooltip text="Download">
-              <button onClick={downloadImage} className="p-2.5 bg-white text-black rounded-xl hover:bg-gray-200 transition-colors ml-2">
-                <Download className="w-5 h-5" />
+          )}
+          <div className="max-w-4xl mx-auto bg-[#1a1a1a] rounded-2xl border border-white/10 p-3 flex flex-col gap-3 focus-within:border-white/30 transition-colors">
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleGenerate();
+                }
+              }}
+              placeholder="Describe your thumbnail edit..."
+              className="w-full bg-transparent resize-none outline-none text-sm min-h-[40px] sm:min-h-[60px] placeholder:text-muted-foreground"
+            />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <button className="p-1.5 text-muted-foreground hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                  <SlidersHorizontal className="w-4 h-4" />
+                </button>
+                <button className="p-1.5 text-muted-foreground hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                  <Wrench className="w-4 h-4" />
+                </button>
+                <button className="p-1.5 text-muted-foreground hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                  <ImagePlus className="w-4 h-4" />
+                </button>
+              </div>
+              <button 
+                onClick={handleGenerate}
+                disabled={isGenerating || !prompt.trim()}
+                className={cn(
+                  "p-2 rounded-full transition-colors flex items-center justify-center",
+                  prompt.trim() && !isGenerating ? "bg-white text-black hover:bg-gray-200" : "bg-white/10 text-white/30"
+                )}
+              >
+                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
               </button>
-            </Tooltip>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Right Sidebar */}
-      <div className="w-80 bg-[#111] border-l border-white/5 flex flex-col">
-        {/* History/Layers Area */}
+      <div className={cn(
+        "fixed inset-y-0 right-0 w-80 bg-[#111] border-l border-white/5 flex flex-col transition-transform duration-300 z-[100] lg:relative lg:translate-x-0",
+        isSidebarOpen ? "translate-x-0" : "translate-x-full"
+      )}>
+        {/* Mobile Header for Sidebar */}
+        <div className="lg:hidden flex items-center justify-between p-4 border-b border-white/5">
+          <span className="text-sm font-bold">History & Layers</span>
+          <button onClick={() => setIsSidebarOpen(false)} className="p-1">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        {/* History Area */}
         <div className="flex-1 p-4 overflow-y-auto">
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-3">
@@ -905,64 +955,6 @@ export default function StudioEditor() {
                   </AnimatePresence>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Prompt Area */}
-        <div className="p-4 border-t border-white/5 bg-[#111]">
-          {isEditRegionMode && (
-            <div className="mb-3 flex items-center justify-between bg-[#1a1a1a] border border-blue-500/30 rounded-xl p-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-blue-500 rounded-lg">
-                  <Brush className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-sm font-bold text-white">Edit Region</span>
-                <span className="text-xs text-muted-foreground ml-1">Paint area to edit on image</span>
-              </div>
-              <button 
-                onClick={() => setIsEditRegionMode(false)}
-                className="p-1 text-muted-foreground hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-          <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 p-3 flex flex-col gap-3 focus-within:border-white/30 transition-colors">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleGenerate();
-                }
-              }}
-              placeholder="Describe your thumbnail edit..."
-              className="w-full bg-transparent resize-none outline-none text-sm min-h-[60px] placeholder:text-muted-foreground"
-            />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <button className="p-1.5 text-muted-foreground hover:text-white transition-colors rounded-lg hover:bg-white/5">
-                  <SlidersHorizontal className="w-4 h-4" />
-                </button>
-                <button className="p-1.5 text-muted-foreground hover:text-white transition-colors rounded-lg hover:bg-white/5">
-                  <Wrench className="w-4 h-4" />
-                </button>
-                <button className="p-1.5 text-muted-foreground hover:text-white transition-colors rounded-lg hover:bg-white/5">
-                  <ImagePlus className="w-4 h-4" />
-                </button>
-              </div>
-              <button 
-                onClick={handleGenerate}
-                disabled={isGenerating || !prompt.trim()}
-                className={cn(
-                  "p-2 rounded-full transition-colors flex items-center justify-center",
-                  prompt.trim() && !isGenerating ? "bg-white text-black hover:bg-gray-200" : "bg-white/10 text-white/30"
-                )}
-              >
-                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
-              </button>
             </div>
           </div>
         </div>

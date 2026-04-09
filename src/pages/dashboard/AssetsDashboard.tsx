@@ -119,12 +119,12 @@ export default function AssetsDashboard() {
   };
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto" dir="ltr">
+    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto" dir="ltr">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-1">Asset Library</h1>
-          <p className="text-sm text-muted-foreground">{assets.length} assets • Reusable across all studios</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Asset Library</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">{assets.length} assets • Reusable across all studios</p>
         </div>
         <input 
           type="file" 
@@ -136,58 +136,58 @@ export default function AssetsDashboard() {
         <button 
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="px-4 py-2 bg-muted/50 hover:bg-muted border border-border text-foreground rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+          className="w-full sm:w-auto px-4 py-2.5 bg-muted/50 hover:bg-muted border border-border text-foreground rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
           {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-          {isUploading ? 'Uploading...' : 'Upload'}
+          {isUploading ? 'Uploading...' : 'Upload Asset'}
         </button>
       </div>
 
       {/* Tabs & Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border overflow-x-auto max-w-full">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border overflow-x-auto max-w-full no-scrollbar">
           <button 
             onClick={() => setActiveTab('all')}
             className={cn(
-              "px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
+              "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
               activeTab === 'all' ? "bg-blue-500/10 text-blue-500" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <ImageIcon className="w-4 h-4" /> All <span className={cn("px-1.5 rounded text-xs", activeTab === 'all' ? "bg-blue-500/20" : "bg-muted")}>{assets.length}</span>
+            <ImageIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> All <span className={cn("px-1.5 rounded text-[10px] sm:text-xs", activeTab === 'all' ? "bg-blue-500/20" : "bg-muted")}>{assets.length}</span>
           </button>
           <button 
             onClick={() => setActiveTab('people')}
             className={cn(
-              "px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
+              "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
               activeTab === 'people' ? "bg-blue-500/10 text-blue-500" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <User className="w-4 h-4" /> People
+            <User className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> People
           </button>
           <button 
             onClick={() => setActiveTab('images')}
             className={cn(
-              "px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
+              "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
               activeTab === 'images' ? "bg-blue-500/10 text-blue-500" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <ImageIcon className="w-4 h-4" /> Images
+            <ImageIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Images
           </button>
-          <button className="px-4 py-1.5 text-muted-foreground hover:text-foreground text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap transition-colors cursor-pointer">
-            <Layers className="w-4 h-4" /> Thumbnail Sets
+          <button className="px-3 sm:px-4 py-1.5 text-muted-foreground hover:text-foreground text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap transition-colors cursor-pointer">
+            <Layers className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Thumbnail Sets
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
           <div className="flex items-center bg-muted/30 border border-border rounded-lg p-1">
-            <button className="px-3 py-1 bg-muted rounded text-foreground text-sm flex items-center gap-2 cursor-pointer">
-              <Clock className="w-4 h-4" /> Newest
+            <button className="px-3 py-1 bg-muted rounded text-foreground text-xs sm:text-sm flex items-center gap-2 cursor-pointer whitespace-nowrap">
+              <Clock className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Newest
             </button>
-            <button className="px-3 py-1 text-muted-foreground hover:text-foreground text-sm flex items-center gap-2 transition-colors cursor-pointer">
+            <button className="px-3 py-1 text-muted-foreground hover:text-foreground text-xs sm:text-sm flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap">
               Oldest
             </button>
           </div>
-          <button className="px-4 py-1.5 bg-muted/30 border border-border rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+          <button className="px-4 py-1.5 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer whitespace-nowrap">
             Select
           </button>
         </div>

@@ -5,10 +5,18 @@ import { Monitor, Store, Layers, Folder, ArrowUpCircle, Settings, HelpCircle, Se
 import { cn } from '../lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = React.useState(false);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/" replace />;

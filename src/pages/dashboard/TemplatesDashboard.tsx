@@ -102,15 +102,15 @@ export default function TemplatesDashboard() {
   });
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto" dir="ltr">
+    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto" dir="ltr">
       {/* Header & Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-3">
-          <p className="text-muted-foreground text-sm">Thumbnail designs our users are requesting, added daily.</p>
-          <span className="px-2 py-1 bg-muted/50 border border-border rounded-md text-xs font-medium text-foreground">✓ Use & sell freely</span>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <p className="text-muted-foreground text-xs sm:text-sm max-w-[300px]">Thumbnail designs added daily.</p>
+          <span className="inline-flex w-fit px-2 py-1 bg-muted/50 border border-border rounded-md text-[10px] sm:text-xs font-medium text-foreground whitespace-nowrap">✓ Use & sell freely</span>
         </div>
         
-        <div className="relative w-full md:w-[400px]">
+        <div className="relative w-full lg:w-[400px]">
           <div className={`flex items-center bg-[#1A1A1A] border rounded-xl overflow-hidden transition-colors ${isSearchFocused ? 'border-blue-500' : 'border-white/10'}`}>
             <div className="pl-4 pr-2 text-muted-foreground">
               <Search className="w-5 h-5" />
@@ -186,34 +186,34 @@ export default function TemplatesDashboard() {
       </div>
 
       {/* Featured Banner */}
-      <div className="relative rounded-3xl overflow-hidden mb-12 bg-gradient-to-r from-[#1a0b0b] to-[#3a1515] border border-red-900/30">
+      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden mb-8 sm:mb-12 bg-gradient-to-r from-[#1a0b0b] to-[#3a1515] border border-red-900/30">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2000&auto=format&fit=crop')] opacity-20 mix-blend-overlay"></div>
-        <div className="relative z-10 p-12 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex-1 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-500/20 text-orange-500 rounded-full text-xs font-bold mb-6">
+        <div className="relative z-10 p-6 sm:p-12 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
+          <div className="flex-1 max-w-xl text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-500/20 text-orange-500 rounded-full text-[10px] sm:text-xs font-bold mb-4 sm:mb-6">
               <TrendingUp className="w-3 h-3" /> TRENDING #1
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight">
               I made thumbnails in 5, 15, and 30 minutes
             </h1>
-            <div className="flex gap-2 mb-8">
-              <span className="px-3 py-1 bg-white/10 rounded-full text-xs text-white">Howto</span>
-              <span className="px-3 py-1 bg-white/10 rounded-full text-xs text-white">design</span>
+            <div className="flex justify-center lg:justify-start gap-2 mb-6 sm:mb-8">
+              <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] sm:text-xs text-white">Howto</span>
+              <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] sm:text-xs text-white">design</span>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
               <button 
                 onClick={() => handleUseStyle('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop')}
-                className="px-6 py-3 bg-white text-black rounded-xl font-bold flex items-center gap-2 hover:bg-gray-200 transition-colors"
+                className="px-6 py-3 bg-white text-black rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors text-sm sm:text-base"
               >
                 <Play className="w-4 h-4 fill-black" /> Use Template
               </button>
-              <button className="px-6 py-3 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-colors">
+              <button className="px-6 py-3 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-colors text-sm sm:text-base">
                 View Details
               </button>
             </div>
           </div>
-          <div className="flex-1 flex justify-end">
-            <div className="w-full max-w-md aspect-video rounded-xl overflow-hidden border-4 border-white/10 shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+          <div className="flex-1 flex justify-center lg:justify-end w-full sm:w-auto">
+            <div className="w-full max-w-md aspect-video rounded-xl overflow-hidden border-4 border-white/10 shadow-2xl transform lg:rotate-2 hover:rotate-0 transition-transform duration-500">
               <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop" alt="Featured" className="w-full h-full object-cover" />
             </div>
           </div>
@@ -221,34 +221,34 @@ export default function TemplatesDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border overflow-x-auto max-w-full no-scrollbar">
           <button 
             onClick={() => setActiveTab('new')}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 transition-colors whitespace-nowrap ${
               activeTab === 'new' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Sparkles className="w-4 h-4" /> New
+            <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> New
           </button>
           <button 
             onClick={() => setActiveTab('trending')}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 transition-colors whitespace-nowrap ${
               activeTab === 'trending' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <TrendingUp className="w-4 h-4" /> Trending
+            <TrendingUp className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Trending
           </button>
           <button 
             onClick={() => setActiveTab('popular')}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 transition-colors whitespace-nowrap ${
               activeTab === 'popular' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Star className="w-4 h-4" /> Popular
+            <Star className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Popular
           </button>
         </div>
-        <button className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+        <button className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
           See all <span className="text-lg leading-none">›</span>
         </button>
       </div>
