@@ -18,7 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!user) {
+  if (!user && location.pathname !== '/templates') {
     return <Navigate to="/" replace />;
   }
 
@@ -46,8 +46,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans transition-colors duration-300" dir="ltr">
-      {/* Sidebar */}
-      <aside className="w-16 border-r border-border flex flex-col items-center py-4 bg-card z-20 transition-colors duration-300">
+      {/* Sidebar (Desktop) */}
+      <aside className="hidden md:flex w-16 border-r border-border flex-col items-center py-4 bg-card z-20 transition-colors duration-300">
         <Link to="/" className="mb-8">
           <div className="w-8 h-8 bg-foreground rounded-md flex items-center justify-center relative overflow-hidden transition-colors duration-300">
             <div className="absolute top-2 left-1.5 w-1 h-1 bg-background rounded-sm transition-colors duration-300"></div>
@@ -59,7 +59,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 flex flex-col gap-4 w-full px-3">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path + '/') && item.path !== '/studio');
-            // Special case for /studio to match /studio/editor
             const isStudioActive = item.path === '/studio' && location.pathname.startsWith('/studio');
             const active = isActive || isStudioActive;
             
@@ -100,17 +99,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex flex-col overflow-hidden relative pb-16 md:pb-0">
         {/* Top Header */}
-        <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background z-10 transition-colors duration-300">
+        <header className="h-16 border-b border-border flex items-center justify-between px-4 sm:px-6 bg-background z-10 transition-colors duration-300">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border border-border rounded-lg transition-colors duration-300">
-              <span className="text-sm font-medium">Solo Sandbox</span>
-              <span className="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded text-muted-foreground">OWNER</span>
+            <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-muted/50 border border-border rounded-lg transition-colors duration-300">
+              <span className="text-xs sm:text-sm font-medium">Solo Sandbox</span>
+              <span className="hidden sm:inline-block text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded text-muted-foreground">OWNER</span>
             </div>
           </div>
 
-          <div className="flex-1 max-w-xl px-6">
+          <div className="flex-1 max-w-xl px-2 sm:px-6 hidden sm:block">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -122,45 +121,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-4 relative">
-            <button 
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
-            >
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="User" className="w-8 h-8 rounded-full border border-border" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border">
-                  <UserIcon className="w-4 h-4 text-muted-foreground" />
-                </div>
-              )}
-            </button>
-
-            {showUserMenu && (
+            {user ? (
               <>
-                <div 
-                  className="fixed inset-0 z-40" 
-                  onClick={() => setShowUserMenu(false)}
-                ></div>
-                <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden py-1">
-                  <div className="px-4 py-2 border-b border-border">
-                    <p className="text-sm font-bold truncate">{user?.displayName || 'User'}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                  </div>
-                  <Link 
-                    to="/settings" 
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    onClick={() => setShowUserMenu(false)}
-                  >
-                    <Settings className="w-4 h-4" /> Settings
-                  </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
-                  >
-                    <LogOut className="w-4 h-4" /> Logout
-                  </button>
-                </div>
+                <button 
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+                >
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="User" className="w-8 h-8 rounded-full border border-border" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border">
+                      <UserIcon className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+                </button>
+
+                {showUserMenu && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowUserMenu(false)}
+                    ></div>
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden py-1">
+                      <div className="px-4 py-2 border-b border-border">
+                        <p className="text-sm font-bold truncate">{user.displayName || 'User'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
+                      <Link 
+                        to="/settings" 
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Settings className="w-4 h-4" /> Settings
+                      </Link>
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4" /> Logout
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
+            ) : (
+              <Link to="/" className="text-sm font-bold bg-foreground text-background px-4 py-2 rounded-full hover:opacity-90 transition-opacity">
+                Log in
+              </Link>
             )}
           </div>
         </header>
@@ -170,6 +177,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t border-border bg-card z-50 flex items-center justify-around px-2 pb-safe">
+        {[...navItems, { icon: Settings, path: '/settings', label: 'Settings' }].map((item) => {
+          const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path + '/') && item.path !== '/studio');
+          const isStudioActive = item.path === '/studio' && location.pathname.startsWith('/studio');
+          const active = isActive || isStudioActive;
+          
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "p-2 flex flex-col items-center justify-center gap-1 transition-colors",
+                active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

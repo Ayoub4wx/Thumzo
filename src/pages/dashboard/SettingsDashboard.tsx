@@ -110,10 +110,10 @@ export default function SettingsDashboard() {
   };
 
   return (
-    <div className="flex h-full" dir="ltr">
+    <div className="flex flex-col md:flex-row h-full" dir="ltr">
       {/* Settings Sidebar */}
-      <div className="w-64 border-r border-border bg-background p-6 overflow-y-auto">
-        <div className="mb-8">
+      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-background p-4 md:p-6 overflow-x-auto md:overflow-y-auto flex-shrink-0">
+        <div className="mb-4 md:mb-8 hidden md:block">
           <button className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-2 mb-6 transition-colors">
             ‹ BACK TO STUDIO
           </button>
@@ -122,24 +122,24 @@ export default function SettingsDashboard() {
           </p>
         </div>
 
-        <nav className="space-y-1">
+        <nav className="flex md:flex-col gap-2 md:gap-1 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
           {sidebarItems.map((item) => {
             if (item.divider) {
-              return <div key={item.id} className="h-px bg-border my-4"></div>;
+              return <div key={item.id} className="hidden md:block h-px bg-border my-4"></div>;
             }
             const Icon = item.icon!;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex-shrink-0 md:w-full flex items-center gap-2 md:gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === item.id
                     ? 'bg-muted text-foreground'
                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                {item.label}
+                <span className="whitespace-nowrap">{item.label}</span>
               </button>
             );
           })}
@@ -147,7 +147,7 @@ export default function SettingsDashboard() {
       </div>
 
       {/* Settings Content */}
-      <div className="flex-1 p-8 overflow-y-auto max-w-5xl">
+      <div className="flex-1 p-4 md:p-8 overflow-y-auto max-w-5xl">
         {activeTab === 'overview' && (
           <div className="space-y-8">
             <h1 className="text-3xl font-bold text-foreground mb-6">Plans</h1>
