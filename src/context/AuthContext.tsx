@@ -42,20 +42,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(mapUser(session?.user));
       setLoading(false);
+      
+      // If we are in a popup, notify the opener and close
+      if (window.opener && session) {
+        window.opener.postMessage({ type: 'SUPABASE_AUTH_SUCCESS' }, window.location.origin);
+        window.close();
+      }
     });
 
-    return () => subscription.unsubscribe();
+    // Listen for messages from popup
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'SUPABASE_AUTH_SUCCESS') {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          setUser(mapUser(session?.user));
+        });
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   const login = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,
+          skipBrowserRedirect: true,
         }
       });
+      
       if (error) throw error;
+      
+      if (data?.url) {
+        // Open the auth URL in a popup
+        const width = 600;
+        const height = 700;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+        
+        const popup = window.open(
+          data.url,
+          'supabase_auth_popup',
+          `width=${width},height=${height},left=${left},top=${top}`
+        );
+        
+        if (!popup) {
+          alert("Please allow popups to sign in.");
+        }
+      }
     } catch (error) {
       console.error("Login failed", error);
     }

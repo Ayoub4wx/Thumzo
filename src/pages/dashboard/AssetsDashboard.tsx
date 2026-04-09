@@ -4,6 +4,7 @@ import { Upload, User, Image as ImageIcon, Layers, Layout, Clock, Loader2, Trash
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
+import { uploadImage } from '../../services/storageService';
 
 interface Asset {
   id: string;
@@ -77,31 +78,16 @@ export default function AssetsDashboard() {
 
     setIsUploading(true);
     try {
-      // Convert to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      await new Promise((resolve) => (reader.onload = resolve));
-      const base64 = reader.result as string;
-
-      // Upload to S3 via API
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: base64,
-          fileName: `${user.uid}-asset-${Date.now()}-${file.name}`,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to upload to S3");
-      const data = await response.json();
+      // Upload to Supabase Storage
+      const fileName = `${user.uid}-asset-${Date.now()}-${file.name}`;
+      const publicUrl = await uploadImage(file, fileName);
 
       // Save to Supabase
       const { error: dbError } = await supabase
         .from("assets")
         .insert({
           user_id: user.uid,
-          url: data.url,
+          url: publicUrl,
           file_name: file.name,
           type: file.type
         });

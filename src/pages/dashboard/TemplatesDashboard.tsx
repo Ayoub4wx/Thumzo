@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Play, Search, TrendingUp, Sparkles, Star, LayoutGrid, X } from "lucide-react";
+import { listTemplates } from "../../services/storageService";
 
 interface Template {
   key: string;
@@ -67,9 +68,7 @@ export default function TemplatesDashboard() {
   useEffect(() => {
     async function fetchTemplates() {
       try {
-        const response = await fetch("/api/templates");
-        if (!response.ok) throw new Error("Failed to fetch templates");
-        const data = await response.json();
+        const data = await listTemplates();
         
         // Map templates to hardcoded titles based on index to ensure consistency
         const enrichedData = data.map((t: any, i: number) => ({

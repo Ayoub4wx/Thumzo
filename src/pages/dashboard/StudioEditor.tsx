@@ -9,6 +9,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
 import { generateThumbnails } from "../../services/geminiService";
+import { uploadBase64Image } from "../../services/storageService";
 import { supabase } from "../../lib/supabase";
 
 type EditorState = 'start' | 'editing';
@@ -274,20 +275,13 @@ export default function StudioEditor() {
         model: model,
       });
       
-      // Upload to S3 via our API
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: base64Images[0],
-          fileName: `${user?.uid || 'anon'}-${Date.now()}.png`,
-        }),
-      });
-      
+      // Upload to Supabase Storage
       let finalUrl = base64Images[0];
-      if (response.ok) {
-        const data = await response.json();
-        finalUrl = data.url;
+      try {
+        const fileName = `${user?.uid || 'anon'}-${Date.now()}.png`;
+        finalUrl = await uploadBase64Image(base64Images[0], fileName);
+      } catch (uploadError) {
+        console.error("Failed to upload to storage", uploadError);
       }
       
       setCurrentImage(finalUrl);
@@ -366,20 +360,13 @@ export default function StudioEditor() {
         model: model,
       });
       
-      // Upload to S3 via our API
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: base64Images[0],
-          fileName: `${user?.uid || 'anon'}-${Date.now()}.png`,
-        }),
-      });
-      
+      // Upload to Supabase Storage
       let finalUrl = base64Images[0];
-      if (response.ok) {
-        const data = await response.json();
-        finalUrl = data.url;
+      try {
+        const fileName = `${user?.uid || 'anon'}-${Date.now()}.png`;
+        finalUrl = await uploadBase64Image(base64Images[0], fileName);
+      } catch (uploadError) {
+        console.error("Failed to upload to storage", uploadError);
       }
       
       setCurrentImage(finalUrl);
@@ -447,19 +434,13 @@ export default function StudioEditor() {
           model: model,
         });
         
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            image: base64Images[0],
-            fileName: `${user?.uid || 'anon'}-${Date.now()}-insert.png`,
-          }),
-        });
-        
+        // Upload to Supabase Storage
         let finalUrl = base64Images[0];
-        if (response.ok) {
-          const data = await response.json();
-          finalUrl = data.url;
+        try {
+          const fileName = `${user?.uid || 'anon'}-${Date.now()}-insert.png`;
+          finalUrl = await uploadBase64Image(base64Images[0], fileName);
+        } catch (uploadError) {
+          console.error("Failed to upload to storage", uploadError);
         }
         
         setCurrentImage(finalUrl);
