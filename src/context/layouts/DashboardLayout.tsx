@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../AuthContext';
 import { Monitor, Store, Layers, Folder, ArrowUpCircle, Settings, HelpCircle, Search, User as UserIcon, LogOut } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '../../lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();

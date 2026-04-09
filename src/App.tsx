@@ -7,7 +7,7 @@ import Navbar from "./components/Navbar";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
-import DashboardLayout from "./layouts/DashboardLayout";
+import DashboardLayout from "./context/layouts/DashboardLayout";
 import StudioDashboard from "./pages/dashboard/StudioDashboard";
 import StudioEditor from "./pages/dashboard/StudioEditor";
 import TemplatesDashboard from "./pages/dashboard/TemplatesDashboard";
