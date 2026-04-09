@@ -9,7 +9,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
 import { generateThumbnails } from "../../services/geminiService";
-import { uploadBase64Image } from "../../services/storageService";
+import { uploadUserBase64Image } from "../../services/storageService";
 import { supabase } from "../../lib/supabase";
 
 type EditorState = 'start' | 'editing';
@@ -279,7 +279,7 @@ export default function StudioEditor() {
       let finalUrl = base64Images[0];
       try {
         const fileName = `${user?.uid || 'anon'}-${Date.now()}.png`;
-        finalUrl = await uploadBase64Image(base64Images[0], fileName);
+        finalUrl = await uploadUserBase64Image(base64Images[0], fileName, user?.uid || 'anon');
       } catch (uploadError) {
         console.error("Failed to upload to storage", uploadError);
       }
@@ -364,7 +364,7 @@ export default function StudioEditor() {
       let finalUrl = base64Images[0];
       try {
         const fileName = `${user?.uid || 'anon'}-${Date.now()}.png`;
-        finalUrl = await uploadBase64Image(base64Images[0], fileName);
+        finalUrl = await uploadUserBase64Image(base64Images[0], fileName, user?.uid || 'anon');
       } catch (uploadError) {
         console.error("Failed to upload to storage", uploadError);
       }
@@ -438,7 +438,7 @@ export default function StudioEditor() {
         let finalUrl = base64Images[0];
         try {
           const fileName = `${user?.uid || 'anon'}-${Date.now()}-insert.png`;
-          finalUrl = await uploadBase64Image(base64Images[0], fileName);
+          finalUrl = await uploadUserBase64Image(base64Images[0], fileName, user?.uid || 'anon');
         } catch (uploadError) {
           console.error("Failed to upload to storage", uploadError);
         }

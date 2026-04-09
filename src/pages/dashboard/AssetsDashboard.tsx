@@ -4,7 +4,7 @@ import { Upload, User, Image as ImageIcon, Layers, Layout, Clock, Loader2, Trash
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
-import { uploadImage } from '../../services/storageService';
+import { uploadUserImage } from '../../services/storageService';
 
 interface Asset {
   id: string;
@@ -80,7 +80,7 @@ export default function AssetsDashboard() {
     try {
       // Upload to Supabase Storage
       const fileName = `${user.uid}-asset-${Date.now()}-${file.name}`;
-      const publicUrl = await uploadImage(file, fileName);
+      const publicUrl = await uploadUserImage(file, fileName, user.uid);
 
       // Save to Supabase
       const { error: dbError } = await supabase

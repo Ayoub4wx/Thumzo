@@ -1,11 +1,18 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowRight, Check, Star, Wand2, Layers, Zap, PenTool, Image as ImageIcon, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function LandingPage() {
   const { user, login } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/studio");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden transition-colors duration-300" dir="ltr">

@@ -1,10 +1,11 @@
 import { supabase } from "../lib/supabase";
 
-const BUCKET_NAME = "thumbnail";
+const PUBLIC_BUCKET = "thumbnail";
+const USER_BUCKET = "user-assets";
 
 export async function listTemplates() {
   try {
-    const { data, error } = await supabase.storage.from(BUCKET_NAME).list("", {
+    const { data, error } = await supabase.storage.from(PUBLIC_BUCKET).list("", {
       limit: 100,
       offset: 0,
       sortBy: { column: "name", order: "asc" },
@@ -20,7 +21,7 @@ export async function listTemplates() {
         return imageExtensions.some((ext) => lowerName.endsWith(ext));
       })
       .map((item) => {
-        const { data: { publicUrl } } = supabase.storage.from(BUCKET_NAME).getPublicUrl(item.name);
+        const { data: { publicUrl } } = supabase.storage.from(PUBLIC_BUCKET).getPublicUrl(item.name);
         return {
           key: item.name,
           url: publicUrl,
@@ -33,25 +34,25 @@ export async function listTemplates() {
   }
 }
 
-export async function uploadImage(file: File | Blob, fileName: string) {
+export async function uploadUserImage(file: File | Blob, fileName: string, userId: string) {
   try {
-    const filePath = `thumbnails/${fileName}`;
-    const { data, error } = await supabase.storage.from(BUCKET_NAME).upload(filePath, file, {
+    const filePath = `${userId}/${fileName}`;
+    const { data, error } = await supabase.storage.from(USER_BUCKET).upload(filePath, file, {
       cacheControl: "3600",
       upsert: true,
     });
 
     if (error) throw error;
 
-    const { data: { publicUrl } } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
+    const { data: { publicUrl } } = supabase.storage.from(USER_BUCKET).getPublicUrl(filePath);
     return publicUrl;
   } catch (error) {
-    console.error("Failed to upload image:", error);
+    console.error("Failed to upload user image:", error);
     throw error;
   }
 }
 
-export async function uploadBase64Image(base64Data: string, fileName: string) {
+export async function uploadUserBase64Image(base64Data: string, fileName: string, userId: string) {
   try {
     // Remove base64 prefix if present
     const base64Image = base64Data.replace(/^data:image\/\w+;base64,/, "");
@@ -65,17 +66,17 @@ export async function uploadBase64Image(base64Data: string, fileName: string) {
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: "image/png" });
 
-    return await uploadImage(blob, fileName);
+    return await uploadUserImage(blob, fileName, userId);
   } catch (error) {
-    console.error("Failed to upload base64 image:", error);
+    console.error("Failed to upload user base64 image:", error);
     throw error;
   }
 }
 
-export async function getDownloadUrl(fileName: string) {
+export async function getDownloadUrl(fileName: string, userId: string) {
   try {
-    const filePath = `thumbnails/${fileName}`;
-    const { data, error } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(filePath, 3600);
+    const filePath = `${userId}/${fileName}`;
+    const { data, error } = await supabase.storage.from(USER_BUCKET).createSignedUrl(filePath, 3600);
     
     if (error) throw error;
     return data.signedUrl;
