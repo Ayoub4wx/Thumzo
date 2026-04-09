@@ -4,8 +4,7 @@ import {
   Receipt, Users, HelpCircle, Mail, Chrome, Bell, Loader2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { updateProfile } from 'firebase/auth';
-import { auth } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
 
 export default function SettingsDashboard() {
   const { user } = useAuth();
@@ -68,12 +67,29 @@ export default function SettingsDashboard() {
   ];
 
   const handleSaveProfile = async () => {
-    if (!auth.currentUser) return;
+    if (!user) return;
     setIsSaving(true);
     try {
-      await updateProfile(auth.currentUser, {
-        displayName: displayName
+      // Update Supabase Auth User Metadata
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { full_name: displayName }
       });
+
+      if (authError) throw authError;
+
+      // Update Supabase Profile table
+      const { error: dbError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.uid,
+          display_name: displayName,
+          email: user.email,
+          photo_url: user.photoURL,
+          updated_at: new Date().toISOString()
+        });
+
+      if (dbError) throw dbError;
+
       alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);

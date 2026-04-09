@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -19,17 +19,8 @@ import {
   Trash2,
   Edit2
 } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
-import {
-  db,
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  deleteDoc,
-  doc
-} from "../../lib/firebase";
 
 interface Generation {
   id: string;
@@ -45,6 +36,8 @@ export default function StudioDashboard() {
   const [loading, setLoading] = useState(true);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [renameModal, setRenameModal] = useState<{ id: string; prompt: string } | null>(null);
+  const [newPrompt, setNewPrompt] = useState("");
 
   useEffect(() => {
     const handleClickOutside = () => setActiveMenuId(null);
@@ -55,11 +48,34 @@ export default function StudioDashboard() {
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await deleteDoc(doc(db, "generations", id));
+      const { error } = await supabase
+        .from("generations")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
       setActiveMenuId(null);
     } catch (error) {
       console.error("Error deleting generation:", error);
       alert("Failed to delete generation.");
+    }
+  };
+
+  const handleRename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renameModal || !newPrompt.trim()) return;
+    try {
+      const { error } = await supabase
+        .from("generations")
+        .update({ prompt: newPrompt.trim() })
+        .eq("id", renameModal.id);
+
+      if (error) throw error;
+      setRenameModal(null);
+      setNewPrompt("");
+    } catch (error) {
+      console.error("Error renaming generation:", error);
+      alert("Failed to rename generation.");
     }
   };
 
@@ -87,29 +103,42 @@ export default function StudioDashboard() {
       return;
     }
 
-    const q = query(
-      collection(db, "generations"),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-    );
+    // Initial fetch
+    const fetchGenerations = async () => {
+      const { data, error } = await supabase
+        .from("generations")
+        .select("*")
+        .eq("user_id", user.uid)
+        .order("created_at", { ascending: false });
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const docs = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Generation[];
-        setGenerations(docs);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching generations:", error);
-        setLoading(false);
-      },
-    );
+      if (!error && data) {
+        setGenerations(data);
+      }
+      setLoading(false);
+    };
 
-    return () => unsubscribe();
+    fetchGenerations();
+
+    // Real-time subscription
+    const subscription = supabase
+      .channel("generations_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "generations",
+          filter: `user_id=eq.${user.uid}`,
+        },
+        () => {
+          fetchGenerations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [user]);
 
   return (
@@ -270,10 +299,21 @@ export default function StudioDashboard() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenameModal({ id: gen.id, prompt: gen.prompt });
+                            setNewPrompt(gen.prompt);
+                            setActiveMenuId(null);
+                          }}
+                          className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" /> Rename
+                        </button>
+                        <button 
                           onClick={(e) => handleOpenInEditor(gen.urls[0], e)}
                           className="w-full text-left px-3 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
                         >
-                          <Edit2 className="w-4 h-4" /> Open in Editor
+                          <Play className="w-4 h-4" /> Open in Editor
                         </button>
                         <button 
                           onClick={(e) => handleDownload(gen.urls[0], gen.id, e)}
@@ -304,6 +344,61 @@ export default function StudioDashboard() {
             </div>
           ))}
       </div>
+
+      {/* Rename Modal */}
+      <AnimatePresence>
+        {renameModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-white">Rename Thumbnail</h3>
+                <button 
+                  onClick={() => setRenameModal(null)}
+                  className="p-2 text-muted-foreground hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <form onSubmit={handleRename} className="p-6">
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    New Title
+                  </label>
+                  <input 
+                    type="text"
+                    value={newPrompt}
+                    onChange={(e) => setNewPrompt(e.target.value)}
+                    autoFocus
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    placeholder="Enter new title..."
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setRenameModal(null)}
+                    className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Video Modal */}
       {showVideoModal && (

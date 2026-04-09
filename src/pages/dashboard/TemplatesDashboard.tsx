@@ -45,7 +45,14 @@ const templateTitles = [
   "Why the Black Ops 7 Beta is a complete disaster",
   "The Most Shameless Valorant Gameplay You Will Ever See",
   "AI Money HACK: ZERO Effort, Literally!",
-  "How to FINALLY Change Your Life (The Ultimate Guide)"
+  "How to FINALLY Change Your Life (The Ultimate Guide)",
+  "I Tried AI Side Hustles for 30 Days (The Results)",
+  "The TRUTH About Making Money on YouTube in 2026",
+  "Stop Wasting Time: Do THIS Instead for 10x Growth",
+  "I Built a $100,000 Business in 24 Hours (No Money)",
+  "Why 99% of Creators Fail (And How to Be the 1%)",
+  "The Secret to Viral Content (It's Not What You Think)",
+  "How to Master Any Skill in 100 Hours (Proven Method)"
 ];
 
 export default function TemplatesDashboard() {

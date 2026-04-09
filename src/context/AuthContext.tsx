@@ -1,9 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, User, db } from "../lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { supabase } from "../lib/supabase";
+
+interface UserProfile {
+  uid: string;
+  email: string | undefined;
+  displayName: string | undefined;
+  photoURL: string | undefined;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
   loading: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
@@ -12,36 +18,44 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const mapUser = (supabaseUser: any): UserProfile | null => {
+    if (!supabaseUser) return null;
+    return {
+      uid: supabaseUser.id,
+      email: supabaseUser.email,
+      displayName: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.display_name || supabaseUser.email?.split('@')[0],
+      photoURL: supabaseUser.user_metadata?.avatar_url,
+    };
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        // Ensure user document exists in Firestore
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            email: currentUser.email,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-            plan: "free",
-            createdAt: new Date().toISOString(),
-          });
-        }
-      }
-      setUser(currentUser);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(mapUser(session?.user));
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(mapUser(session?.user));
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        }
+      });
+      if (error) throw error;
     } catch (error) {
       console.error("Login failed", error);
     }
@@ -49,7 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
       console.error("Logout failed", error);
     }

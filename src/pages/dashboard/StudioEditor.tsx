@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -9,7 +9,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
 import { generateThumbnails } from "../../services/geminiService";
-import { db, collection, addDoc, serverTimestamp } from "../../lib/firebase";
+import { supabase } from "../../lib/supabase";
 
 type EditorState = 'start' | 'editing';
 
@@ -301,15 +301,15 @@ export default function StudioEditor() {
       }
       
       if (user) {
-        await addDoc(collection(db, "generations"), {
-          userId: user.uid,
-          prompt,
-          urls: [finalUrl],
-          imageSize: "1K",
-          aspectRatio: "16:9",
-          model: model,
-          createdAt: serverTimestamp(),
-        });
+        const { error: dbError } = await supabase
+          .from("generations")
+          .insert({
+            user_id: user.uid,
+            prompt: prompt,
+            urls: [finalUrl]
+          });
+        
+        if (dbError) console.error("Failed to save generation to DB", dbError);
       }
       
     } catch (error: any) {
@@ -386,15 +386,15 @@ export default function StudioEditor() {
       setHistory(prev => [{ url: finalUrl, prompt: "Polished Image" }, ...prev]);
       
       if (user) {
-        await addDoc(collection(db, "generations"), {
-          userId: user.uid,
-          prompt: "Polished Image",
-          urls: [finalUrl],
-          imageSize: "1K",
-          aspectRatio: "16:9",
-          model: model,
-          createdAt: serverTimestamp(),
-        });
+        const { error: dbError } = await supabase
+          .from("generations")
+          .insert({
+            user_id: user.uid,
+            prompt: "Polished Image",
+            urls: [finalUrl]
+          });
+        
+        if (dbError) console.error("Failed to save generation to DB", dbError);
       }
       
     } catch (error: any) {
@@ -466,15 +466,15 @@ export default function StudioEditor() {
         setHistory(prev => [{ url: finalUrl, prompt: "Inserted Person" }, ...prev]);
         
         if (user) {
-          await addDoc(collection(db, "generations"), {
-            userId: user.uid,
-            prompt: "Inserted Person",
-            urls: [finalUrl],
-            imageSize: "1K",
-            aspectRatio: "16:9",
-            model: model,
-            createdAt: serverTimestamp(),
-          });
+          const { error: dbError } = await supabase
+            .from("generations")
+            .insert({
+              user_id: user.uid,
+              prompt: "Inserted Person",
+              urls: [finalUrl]
+            });
+          
+          if (dbError) console.error("Failed to save generation to DB", dbError);
         }
       } catch (error: any) {
         console.error("Insert failed", error);

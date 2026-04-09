@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import { uploadImageToS3, listTemplates } from "./src/services/s3Service";
+import { analyzeImageBackend, generateThumbnailsBackend } from "./src/services/backendGeminiService";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +12,7 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({ limit: '50mb' }));
 
   // API routes
   app.get("/api/health", (req, res) => {
@@ -39,6 +40,34 @@ async function startServer() {
     } catch (error) {
       console.error("S3 Upload Error:", error);
       res.status(500).json({ error: "Failed to upload to S3" });
+    }
+  });
+
+  app.post("/api/ai/analyze", async (req, res) => {
+    try {
+      const { imageUrl } = req.body;
+      if (!imageUrl) {
+        return res.status(400).json({ error: "Missing imageUrl" });
+      }
+      const analysis = await analyzeImageBackend(imageUrl);
+      res.json(analysis);
+    } catch (error: any) {
+      console.error("AI Analyze Error:", error);
+      res.status(500).json({ error: error.message || "Failed to analyze image" });
+    }
+  });
+
+  app.post("/api/ai/generate", async (req, res) => {
+    try {
+      const options = req.body;
+      if (!options.prompt) {
+        return res.status(400).json({ error: "Missing prompt" });
+      }
+      const images = await generateThumbnailsBackend(options);
+      res.json({ images });
+    } catch (error: any) {
+      console.error("AI Generate Error:", error);
+      res.status(500).json({ error: error.message || "Failed to generate thumbnails" });
     }
   });
 

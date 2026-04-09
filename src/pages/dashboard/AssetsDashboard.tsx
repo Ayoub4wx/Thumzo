@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Upload, User, Image as ImageIcon, Layers, Layout, Clock, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { db, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
+import { cn } from '../../lib/utils';
 
 interface Asset {
   id: string;
@@ -16,6 +18,7 @@ export default function AssetsDashboard() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -25,26 +28,48 @@ export default function AssetsDashboard() {
       return;
     }
 
-    const q = query(
-      collection(db, "assets"),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
-    );
+    const fetchAssets = async () => {
+      const { data, error } = await supabase
+        .from("assets")
+        .select("*")
+        .eq("user_id", user.uid)
+        .order("created_at", { ascending: false });
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Asset[];
-      setAssets(docs);
+      if (!error && data) {
+        setAssets(data);
+      }
       setLoading(false);
-    }, (error) => {
-      console.error("Error fetching assets:", error);
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchAssets();
+
+    const subscription = supabase
+      .channel("assets_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "assets",
+          filter: `user_id=eq.${user.uid}`,
+        },
+        () => {
+          fetchAssets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [user]);
+
+  const filteredAssets = assets.filter(asset => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'people') return asset.type.includes('image') && asset.fileName.toLowerCase().includes('person');
+    if (activeTab === 'images') return asset.type.includes('image');
+    return true;
+  });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,14 +96,17 @@ export default function AssetsDashboard() {
       if (!response.ok) throw new Error("Failed to upload to S3");
       const data = await response.json();
 
-      // Save to Firestore
-      await addDoc(collection(db, "assets"), {
-        userId: user.uid,
-        url: data.url,
-        fileName: file.name,
-        type: file.type,
-        createdAt: serverTimestamp(),
-      });
+      // Save to Supabase
+      const { error: dbError } = await supabase
+        .from("assets")
+        .insert({
+          user_id: user.uid,
+          url: data.url,
+          file_name: file.name,
+          type: file.type
+        });
+
+      if (dbError) throw dbError;
 
     } catch (error) {
       console.error("Upload failed", error);
@@ -92,7 +120,12 @@ export default function AssetsDashboard() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this asset?")) return;
     try {
-      await deleteDoc(doc(db, "assets", id));
+      const { error } = await supabase
+        .from("assets")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
     } catch (error) {
       console.error("Failed to delete asset", error);
       alert("Failed to delete asset.");
@@ -127,17 +160,35 @@ export default function AssetsDashboard() {
       {/* Tabs & Controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border overflow-x-auto max-w-full">
-          <Link to="/assets" className="px-4 py-1.5 bg-blue-500/10 text-blue-500 text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer">
-            <User className="w-4 h-4" /> People <span className="bg-blue-500/20 px-1.5 rounded text-xs">{assets.length}</span>
-          </Link>
-          <Link to="/studio" className="px-4 py-1.5 text-muted-foreground hover:text-foreground text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap transition-colors cursor-pointer">
+          <button 
+            onClick={() => setActiveTab('all')}
+            className={cn(
+              "px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
+              activeTab === 'all' ? "bg-blue-500/10 text-blue-500" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <ImageIcon className="w-4 h-4" /> All <span className={cn("px-1.5 rounded text-xs", activeTab === 'all' ? "bg-blue-500/20" : "bg-muted")}>{assets.length}</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('people')}
+            className={cn(
+              "px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
+              activeTab === 'people' ? "bg-blue-500/10 text-blue-500" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <User className="w-4 h-4" /> People
+          </button>
+          <button 
+            onClick={() => setActiveTab('images')}
+            className={cn(
+              "px-4 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
+              activeTab === 'images' ? "bg-blue-500/10 text-blue-500" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
             <ImageIcon className="w-4 h-4" /> Images
-          </Link>
-          <Link to="/templates" className="px-4 py-1.5 text-muted-foreground hover:text-foreground text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap transition-colors cursor-pointer">
-            <Layers className="w-4 h-4" /> Thumbnail Sets
-          </Link>
+          </button>
           <button className="px-4 py-1.5 text-muted-foreground hover:text-foreground text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap transition-colors cursor-pointer">
-            <Layout className="w-4 h-4" /> Social Formats
+            <Layers className="w-4 h-4" /> Thumbnail Sets
           </button>
         </div>
 
@@ -172,15 +223,15 @@ export default function AssetsDashboard() {
           onClick={() => fileInputRef.current?.click()}
           className="aspect-square rounded-xl border border-dashed border-border bg-muted/10 hover:bg-muted/30 flex flex-col items-center justify-center gap-2 transition-colors group"
         >
-          <User className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" />
+          <ImageIcon className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" />
           <span className="text-sm font-medium text-foreground">Drop or click</span>
           <span className="text-[10px] text-muted-foreground">PNG, JPG, WEBP • Max 30MB</span>
         </button>
 
         {loading ? (
           <div className="col-span-full py-10 text-center text-muted-foreground">Loading assets...</div>
-        ) : (
-          assets.map((asset) => (
+        ) : filteredAssets.length > 0 ? (
+          filteredAssets.map((asset) => (
             <div key={asset.id} className="aspect-square rounded-xl border border-border overflow-hidden relative group cursor-pointer">
               <img src={asset.url} alt={asset.fileName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -193,6 +244,10 @@ export default function AssetsDashboard() {
               </div>
             </div>
           ))
+        ) : (
+          <div className="col-span-full py-20 text-center bg-muted/10 rounded-2xl border border-dashed border-border">
+            <p className="text-muted-foreground">No assets found in this category.</p>
+          </div>
         )}
       </div>
     </div>

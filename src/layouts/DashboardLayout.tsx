@@ -1,16 +1,27 @@
 import React from 'react';
-import { Link, useLocation, Navigate } from 'react-router-dom';
+import { Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Monitor, Store, Layers, Folder, ArrowUpCircle, Settings, HelpCircle, Search, User as UserIcon } from 'lucide-react';
+import { Monitor, Store, Layers, Folder, ArrowUpCircle, Settings, HelpCircle, Search, User as UserIcon, LogOut } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showUserMenu, setShowUserMenu] = React.useState(false);
 
   if (!user) {
     return <Navigate to="/" replace />;
   }
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
+  };
 
   const navItems = [
     { icon: Monitor, path: '/studio', label: 'Studio' },
@@ -102,13 +113,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt="User" className="w-8 h-8 rounded-full border border-border" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border">
-                <UserIcon className="w-4 h-4 text-muted-foreground" />
-              </div>
+          <div className="flex items-center gap-4 relative">
+            <button 
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="User" className="w-8 h-8 rounded-full border border-border" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border">
+                  <UserIcon className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+            </button>
+
+            {showUserMenu && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowUserMenu(false)}
+                ></div>
+                <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden py-1">
+                  <div className="px-4 py-2 border-b border-border">
+                    <p className="text-sm font-bold truncate">{user?.displayName || 'User'}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                  </div>
+                  <Link 
+                    to="/settings" 
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    onClick={() => setShowUserMenu(false)}
+                  >
+                    <Settings className="w-4 h-4" /> Settings
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" /> Logout
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </header>
