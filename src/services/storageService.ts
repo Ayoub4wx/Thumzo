@@ -11,23 +11,32 @@ export async function listTemplates() {
       sortBy: { column: "name", order: "asc" },
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase storage list error:", error);
+      throw error;
+    }
+
+    console.log("Raw files from Supabase bucket 'thumbnail':", data);
 
     const imageExtensions = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".jfif"];
 
-    return (data || [])
-      .filter((item) => {
-        const lowerName = item.name.toLowerCase();
-        return imageExtensions.some((ext) => lowerName.endsWith(ext));
-      })
-      .map((item) => {
-        const { data: { publicUrl } } = supabase.storage.from(PUBLIC_BUCKET).getPublicUrl(item.name);
-        return {
-          key: item.name,
-          url: publicUrl,
-          lastModified: item.updated_at,
-        };
-      });
+    const filteredData = (data || []).filter((item) => {
+      const lowerName = item.name.toLowerCase();
+      // Ignore the default empty folder placeholder if it exists
+      if (item.name === ".emptyFolderPlaceholder") return false;
+      return imageExtensions.some((ext) => lowerName.endsWith(ext));
+    });
+
+    console.log("Filtered image files:", filteredData);
+
+    return filteredData.map((item) => {
+      const { data: { publicUrl } } = supabase.storage.from(PUBLIC_BUCKET).getPublicUrl(item.name);
+      return {
+        key: item.name,
+        url: publicUrl,
+        lastModified: item.updated_at,
+      };
+    });
   } catch (error) {
     console.error("Failed to list templates:", error);
     throw error;

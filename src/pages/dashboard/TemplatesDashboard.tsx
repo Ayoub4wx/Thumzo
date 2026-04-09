@@ -60,6 +60,7 @@ export default function TemplatesDashboard() {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeTab, setActiveTab] = useState('new');
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,8 +69,13 @@ export default function TemplatesDashboard() {
   useEffect(() => {
     async function fetchTemplates() {
       try {
+        setError(null);
         const data = await listTemplates();
         
+        if (!data || data.length === 0) {
+          setError("No templates found in the 'thumbnail' bucket. Please ensure the bucket exists, is public, has files, and has a SELECT policy for public access.");
+        }
+
         // Map templates to hardcoded titles based on index to ensure consistency
         const enrichedData = data.map((t: any, i: number) => ({
           ...t,
@@ -81,8 +87,9 @@ export default function TemplatesDashboard() {
         
         setTemplates(enrichedData);
         setLoading(false);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        setError(err.message || "Failed to fetch templates. Check console for details.");
         setLoading(false);
       }
     }
@@ -257,6 +264,27 @@ export default function TemplatesDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {loading ? (
           <div className="col-span-full py-20 text-center text-muted-foreground">Loading templates...</div>
+        ) : error ? (
+          <div className="col-span-full py-10 flex flex-col items-center justify-center text-center">
+            <div className="bg-red-500/10 text-red-500 p-6 rounded-xl max-w-2xl border border-red-500/20">
+              <h3 className="font-bold mb-2 text-lg">Error Loading Templates</h3>
+              <p className="text-sm mb-4">{error}</p>
+              <div className="text-xs text-left bg-background/50 p-4 rounded-lg border border-red-500/10">
+                <p className="font-bold mb-2">Troubleshooting Supabase Storage:</p>
+                <ol className="list-decimal pl-4 space-y-2">
+                  <li>Go to your Supabase Dashboard &gt; Storage</li>
+                  <li>Ensure a bucket named <strong>thumbnail</strong> exists</li>
+                  <li>Ensure the bucket is set to <strong>Public</strong></li>
+                  <li>Upload some images (.png, .jpg) to the root of the bucket</li>
+                  <li>Go to Storage &gt; Policies and create a new policy for the <code>storage.objects</code> table:
+                    <br/>- Action: <strong>SELECT</strong>
+                    <br/>- Target roles: <strong>public</strong> (or anon/authenticated)
+                    <br/>- Policy definition: <code>bucket_id = 'thumbnail'</code>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
         ) : filteredTemplates.length > 0 ? (
           filteredTemplates.map((template, index) => (
             <div key={template.key} className="group cursor-pointer">
