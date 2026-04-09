@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 
-const PUBLIC_BUCKET = "thumbnail";
+const PUBLIC_BUCKET = "thumbnails";
 const USER_BUCKET = "user-assets";
 
 export async function listTemplates() {

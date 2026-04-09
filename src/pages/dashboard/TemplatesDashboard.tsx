@@ -73,7 +73,7 @@ export default function TemplatesDashboard() {
         const data = await listTemplates();
         
         if (!data || data.length === 0) {
-          setError("No templates found in the 'thumbnail' bucket. Please ensure the bucket exists, is public, has files, and has a SELECT policy for public access.");
+          setError("No templates found in the 'thumbnails' bucket. Please ensure the bucket exists, is public, has files, and has a SELECT policy for public access.");
         }
 
         // Map templates to hardcoded titles based on index to ensure consistency
@@ -273,13 +273,13 @@ export default function TemplatesDashboard() {
                 <p className="font-bold mb-2">Troubleshooting Supabase Storage:</p>
                 <ol className="list-decimal pl-4 space-y-2">
                   <li>Go to your Supabase Dashboard &gt; Storage</li>
-                  <li>Ensure a bucket named <strong>thumbnail</strong> exists</li>
+                  <li>Ensure a bucket named <strong>thumbnails</strong> exists</li>
                   <li>Ensure the bucket is set to <strong>Public</strong></li>
                   <li>Upload some images (.png, .jpg) to the root of the bucket</li>
                   <li>Go to Storage &gt; Policies and create a new policy for the <code>storage.objects</code> table:
                     <br/>- Action: <strong>SELECT</strong>
                     <br/>- Target roles: <strong>public</strong> (or anon/authenticated)
-                    <br/>- Policy definition: <code>bucket_id = 'thumbnail'</code>
+                    <br/>- Policy definition: <code>bucket_id = 'thumbnails'</code>
                   </li>
                 </ol>
               </div>
