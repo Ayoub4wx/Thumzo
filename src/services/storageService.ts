@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 
-const PUBLIC_BUCKET = "THUMBNAILS";
+const PUBLIC_BUCKET = "thumbnails";
 const USER_BUCKET = "user-assets";
 
 export async function listTemplates() {
@@ -16,15 +16,16 @@ export async function listTemplates() {
       throw error;
     }
 
-    console.log("Raw files from Supabase bucket 'thumbnail':", data);
-
-    const imageExtensions = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".jfif"];
+    console.log("Raw files from Supabase bucket 'thumbnails':", data);
 
     const filteredData = (data || []).filter((item) => {
-      const lowerName = item.name.toLowerCase();
+      // Supabase returns folders with id: null, so we skip them
+      if (!item.id) return false;
       // Ignore the default empty folder placeholder if it exists
       if (item.name === ".emptyFolderPlaceholder") return false;
-      return imageExtensions.some((ext) => lowerName.endsWith(ext));
+      
+      // Accept all valid files (ignoring extension checks since uploaded files might not have them)
+      return true;
     });
 
     console.log("Filtered image files:", filteredData);
@@ -35,6 +36,7 @@ export async function listTemplates() {
         key: item.name,
         url: publicUrl,
         lastModified: item.updated_at,
+        type: item.metadata?.mimetype || 'image/jpeg',
       };
     });
   } catch (error) {

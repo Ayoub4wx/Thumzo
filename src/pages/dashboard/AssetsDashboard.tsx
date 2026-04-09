@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Upload, User, Image as ImageIcon, Layers, Layout, Clock, Loader2, Trash2 } from 'lucide-react';
+import { Upload, User, Image as ImageIcon, Layers, Layout, Clock, Loader2, Trash2, Music, Film } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
@@ -68,7 +68,7 @@ export default function AssetsDashboard() {
   const filteredAssets = assets.filter(asset => {
     if (activeTab === 'all') return true;
     if (activeTab === 'people') return asset.type.includes('image') && asset.fileName.toLowerCase().includes('person');
-    if (activeTab === 'images') return asset.type.includes('image');
+    if (activeTab === 'media') return asset.type.includes('image') || asset.type.includes('video') || asset.type.includes('audio');
     return true;
   });
 
@@ -130,7 +130,7 @@ export default function AssetsDashboard() {
           type="file" 
           ref={fileInputRef} 
           onChange={handleFileChange} 
-          accept="image/*" 
+          accept="image/*,video/*,audio/*" 
           className="hidden" 
         />
         <button 
@@ -165,13 +165,13 @@ export default function AssetsDashboard() {
             <User className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> People
           </button>
           <button 
-            onClick={() => setActiveTab('images')}
+            onClick={() => setActiveTab('media')}
             className={cn(
               "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors",
-              activeTab === 'images' ? "bg-blue-500/10 text-blue-500" : "text-muted-foreground hover:text-foreground"
+              activeTab === 'media' ? "bg-blue-500/10 text-blue-500" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <ImageIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Images
+            <Film className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Media
           </button>
           <button className="px-3 sm:px-4 py-1.5 text-muted-foreground hover:text-foreground text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 whitespace-nowrap transition-colors cursor-pointer">
             <Layers className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Thumbnail Sets
@@ -211,15 +211,28 @@ export default function AssetsDashboard() {
         >
           <ImageIcon className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" />
           <span className="text-sm font-medium text-foreground">Drop or click</span>
-          <span className="text-[10px] text-muted-foreground">PNG, JPG, WEBP • Max 30MB</span>
+          <span className="text-[10px] text-muted-foreground">Images, Video, Audio • Max 30MB</span>
         </button>
 
         {loading ? (
           <div className="col-span-full py-10 text-center text-muted-foreground">Loading assets...</div>
         ) : filteredAssets.length > 0 ? (
-          filteredAssets.map((asset) => (
-            <div key={asset.id} className="aspect-square rounded-xl border border-border overflow-hidden relative group cursor-pointer">
-              <img src={asset.url} alt={asset.fileName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          filteredAssets.map((asset) => {
+            const isVideo = asset.type?.startsWith('video/') || asset.fileName.match(/\.(mp4|webm|ogg|mov)$/i);
+            const isAudio = asset.type?.startsWith('audio/') || asset.fileName.match(/\.(mp3|wav|m4a)$/i);
+
+            return (
+            <div key={asset.id} className="aspect-square rounded-xl border border-border overflow-hidden relative group cursor-pointer bg-muted/10 flex items-center justify-center">
+              {isVideo ? (
+                <video src={asset.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" autoPlay muted loop playsInline />
+              ) : isAudio ? (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground group-hover:scale-105 transition-transform duration-500 p-2 text-center">
+                  <Music className="w-8 h-8" />
+                  <span className="text-[10px] font-medium truncate w-full">{asset.fileName}</span>
+                </div>
+              ) : (
+                <img src={asset.url} alt={asset.fileName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              )}
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <button 
                   onClick={() => handleDelete(asset.id)}
@@ -229,7 +242,7 @@ export default function AssetsDashboard() {
                 </button>
               </div>
             </div>
-          ))
+          )})
         ) : (
           <div className="col-span-full py-20 text-center bg-muted/10 rounded-2xl border border-dashed border-border">
             <p className="text-muted-foreground">No assets found in this category.</p>

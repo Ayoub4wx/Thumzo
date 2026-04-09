@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { Play, Search, TrendingUp, Sparkles, Star, LayoutGrid, X } from "lucide-react";
+import { Play, Search, TrendingUp, Sparkles, Star, LayoutGrid, X, Music } from "lucide-react";
 import { listTemplates } from "../../services/storageService";
 
 interface Template {
@@ -12,6 +12,7 @@ interface Template {
   isNew?: boolean;
   isTrending?: boolean;
   title?: string;
+  type?: string;
 }
 
 const categories = [
@@ -286,10 +287,23 @@ export default function TemplatesDashboard() {
             </div>
           </div>
         ) : filteredTemplates.length > 0 ? (
-          filteredTemplates.map((template, index) => (
+          filteredTemplates.map((template, index) => {
+            const isVideo = template.type?.startsWith('video/') || template.url.match(/\.(mp4|webm|ogg|mov)$/i);
+            const isAudio = template.type?.startsWith('audio/') || template.url.match(/\.(mp3|wav|m4a)$/i);
+
+            return (
             <div key={template.key} className="group cursor-pointer">
-              <div className="aspect-video rounded-xl overflow-hidden mb-3 relative border border-border group-hover:border-accent transition-colors">
-                <img src={template.url} alt="Template" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className="aspect-video rounded-xl overflow-hidden mb-3 relative border border-border group-hover:border-accent transition-colors bg-muted/10 flex items-center justify-center">
+                {isVideo ? (
+                  <video src={template.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" autoPlay muted loop playsInline />
+                ) : isAudio ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground group-hover:scale-105 transition-transform duration-500">
+                    <Music className="w-8 h-8" />
+                    <span className="text-xs font-medium">Audio</span>
+                  </div>
+                ) : (
+                  <img src={template.url} alt="Template" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                )}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button 
                     onClick={() => handleUseStyle(template.url)}
@@ -302,7 +316,7 @@ export default function TemplatesDashboard() {
               <h3 className="font-bold text-foreground text-sm mb-1 line-clamp-2">{template.title}</h3>
               <p className="text-xs text-muted-foreground">{template.category || 'youtube'} • {new Date(template.lastModified).toLocaleDateString()}</p>
             </div>
-          ))
+          )})
         ) : (
           <div className="col-span-full py-20 text-center bg-muted/30 rounded-2xl border border-dashed border-border">
             <p className="text-muted-foreground text-lg">No templates found for this filter.</p>
