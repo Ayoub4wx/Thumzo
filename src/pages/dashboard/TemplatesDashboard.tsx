@@ -271,16 +271,16 @@ export default function TemplatesDashboard() {
               <h3 className="font-bold mb-2 text-lg">Error Loading Templates</h3>
               <p className="text-sm mb-4">{error}</p>
               <div className="text-xs text-left bg-background/50 p-4 rounded-lg border border-red-500/10">
-                <p className="font-bold mb-2">Troubleshooting Supabase Storage:</p>
+                <p className="font-bold mb-2">Troubleshooting Supabase Storage RLS:</p>
                 <ol className="list-decimal pl-4 space-y-2">
-                  <li>Go to your Supabase Dashboard &gt; Storage</li>
-                  <li>Ensure a bucket named <strong>thumbnails</strong> exists (must be lowercase!)</li>
-                  <li>Ensure the bucket is set to <strong>Public</strong></li>
-                  <li>Upload some images (.png, .jpg) to the root of the bucket</li>
-                  <li>Go to Storage &gt; Policies and create a new policy for the <code>storage.objects</code> table:
+                  <li>Go to your Supabase Dashboard &gt; Storage &gt; Policies</li>
+                  <li>Find the <code>storage.objects</code> table.</li>
+                  <li>You likely have a policy that restricts access to the "owner". You need a fully public policy.</li>
+                  <li>Edit or Create a policy:
                     <br/>- Action: <strong>SELECT</strong>
-                    <br/>- Target roles: <strong>public</strong> (or anon/authenticated)
+                    <br/>- Target roles: <strong>public</strong> (or leave blank for all)
                     <br/>- Policy definition: <code>bucket_id = 'thumbnails'</code>
+                    <br/>- <strong className="text-red-400">CRITICAL:</strong> Do NOT include <code>auth.uid() = owner</code> in the definition!
                   </li>
                 </ol>
               </div>

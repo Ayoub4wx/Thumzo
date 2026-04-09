@@ -116,7 +116,7 @@ export default function LandingPage() {
               <div className="p-5 flex flex-col gap-4">
                 {/* Sketch Image */}
                 <div className="w-full aspect-video bg-white rounded-xl overflow-hidden relative">
-                  <img src="https://picsum.photos/seed/sketch/800/450?grayscale" alt="Sketch" className="w-full h-full object-cover opacity-80 mix-blend-multiply" />
+                  <img src="https://fncjyuuxqpnydgnugmqz.supabase.co/storage/v1/object/public/logos%20company/Untitled%20folder/Screenshot%202026-04-09%20214900.png" alt="Sketch" className="w-full h-full object-cover opacity-80 mix-blend-multiply" />
                   <div className="absolute inset-0 border-2 border-dashed border-gray-300 rounded-xl m-2"></div>
                 </div>
                 
@@ -128,7 +128,7 @@ export default function LandingPage() {
 
                 {/* Generated Image */}
                 <div className="w-full aspect-video rounded-xl overflow-hidden relative shadow-lg">
-                  <img src="https://picsum.photos/seed/mrbeast/800/450" alt="Generated Thumbnail" className="w-full h-full object-cover" />
+                  <img src="https://fncjyuuxqpnydgnugmqz.supabase.co/storage/v1/object/public/logos%20company/Untitled%20folder/Screenshot%202026-04-09%20214931.png" alt="Generated Thumbnail" className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>

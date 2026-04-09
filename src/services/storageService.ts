@@ -18,13 +18,15 @@ export async function listTemplates() {
 
     console.log("Raw files from Supabase bucket 'thumbnails':", data);
 
-    const filteredData = (data || []).filter((item) => {
-      // Supabase returns folders with id: null, so we skip them
-      if (!item.id) return false;
+    if (!data || data.length === 0) {
+      throw new Error("Supabase returned 0 files. This means your RLS policy is blocking access. Make sure your SELECT policy does NOT restrict by 'owner'.");
+    }
+
+    const filteredData = data.filter((item) => {
       // Ignore the default empty folder placeholder if it exists
       if (item.name === ".emptyFolderPlaceholder") return false;
       
-      // Accept all valid files (ignoring extension checks since uploaded files might not have them)
+      // Accept all valid files
       return true;
     });
 
@@ -35,7 +37,7 @@ export async function listTemplates() {
       return {
         key: item.name,
         url: publicUrl,
-        lastModified: item.updated_at,
+        lastModified: item.updated_at || new Date().toISOString(),
         type: item.metadata?.mimetype || 'image/jpeg',
       };
     });
