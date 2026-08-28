@@ -1,21 +1,26 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogIn, Menu, X, LogOut, User as UserIcon, Sun, Moon } from "lucide-react";
+import { ArrowLeft, LogOut, Menu, Moon, Sun, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import BrandLogo from "./BrandLogo";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, login, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
+  const isResolvingAuth = loading && !user;
 
+  const pricingPath = user ? "/settings/billing" : "/pricing";
   const navLinks = [
-    { name: "Tools", path: "/studio" },
+    { name: "Tools", path: "/#tools" },
+    { name: "Tutorials", path: "/tutorials" },
     { name: "How it works", path: "/#how-it-works" },
-    { name: "Pricing", path: "/#pricing" },
+    { name: "Pricing", path: pricingPath },
   ];
 
   const handleLinkClick = (path: string) => {
@@ -39,25 +44,15 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border transition-colors duration-300" dir="ltr">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24">
+        <div className={cn("flex items-center justify-between", isAuthPage ? "h-20" : "h-24")}>
           
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-foreground rounded-md flex items-center justify-center relative overflow-hidden flex-shrink-0 transition-colors duration-300">
-              {/* Blocky face representation */}
-              <div className="absolute top-2.5 left-2 w-1.5 h-1.5 bg-background rounded-sm transition-colors duration-300"></div>
-              <div className="absolute top-2.5 right-2 w-1.5 h-1.5 bg-background rounded-sm transition-colors duration-300"></div>
-              <div className="absolute bottom-2.5 left-2.5 w-4 h-1.5 bg-background rounded-sm transition-colors duration-300"></div>
-              <div className="absolute -right-1 top-4 w-2 h-2 bg-background rounded-sm transition-colors duration-300"></div>
-            </div>
-            <div className="flex flex-col justify-center">
-              <span className="text-[22px] font-bold leading-none tracking-tight text-foreground mb-1 transition-colors duration-300">Thumzo</span>
-              <span className="text-[9px] font-bold text-muted-foreground tracking-[0.2em] leading-none transition-colors duration-300">AI THUMBNAIL EDITOR</span>
-            </div>
+            <BrandLogo size="md" />
           </Link>
 
           {/* Center Links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className={cn("hidden items-center gap-8 md:flex", isAuthPage && "md:hidden")}>
             {navLinks.map((link) => (
               <button
                 key={link.path}
@@ -82,13 +77,26 @@ export default function Navbar() {
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
-            {user ? (
+            {isAuthPage ? (
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:bg-muted"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to site
+              </Link>
+            ) : isResolvingAuth ? (
+              <div
+                aria-hidden="true"
+                className="h-10 w-[172px] rounded-full bg-muted/80 animate-pulse"
+              />
+            ) : user ? (
               <div className="flex items-center gap-4">
                 <Link 
-                  to="/studio"
+                  to="/projects"
                   className="px-6 py-2.5 text-sm font-bold text-background bg-foreground rounded-full hover:opacity-90 transition-opacity"
                 >
-                  Open Studio
+                  My Projects
                 </Link>
                 <button 
                   onClick={logout}
@@ -100,18 +108,18 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <button 
-                  onClick={login}
+                <Link
+                  to="/login"
                   className="px-6 py-2.5 text-sm font-bold text-foreground bg-transparent border border-border rounded-full hover:bg-muted transition-colors"
                 >
                   Log in
-                </button>
-                <button 
-                  onClick={login}
+                </Link>
+                <Link 
+                  to="/signup"
                   className="px-6 py-2.5 text-sm font-bold text-background bg-foreground rounded-full hover:opacity-90 transition-opacity"
                 >
                   Sign up
-                </button>
+                </Link>
               </>
             )}
           </div>
@@ -124,15 +132,25 @@ export default function Navbar() {
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
-            <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-muted-foreground hover:text-foreground">
-              {isOpen ? <X /> : <Menu />}
-            </button>
+            {isAuthPage ? (
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm font-bold text-foreground transition-colors hover:bg-muted"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Link>
+            ) : isResolvingAuth ? null : (
+              <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-muted-foreground hover:text-foreground">
+                {isOpen ? <X /> : <Menu />}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      {isOpen && (
+      {isOpen && !isAuthPage && !isResolvingAuth && (
         <div className="md:hidden bg-background border-b border-border px-4 py-6 space-y-4 transition-colors duration-300">
           {navLinks.map((link) => (
             <button
@@ -150,11 +168,11 @@ export default function Navbar() {
             {user ? (
               <div className="flex flex-col gap-3">
                 <Link 
-                  to="/studio"
+                  to="/projects"
                   onClick={() => setIsOpen(false)}
                   className="w-full flex items-center justify-center gap-2 bg-foreground text-background px-6 py-3 rounded-xl font-bold transition-colors duration-300"
                 >
-                  Open Studio
+                  My Projects
                 </Link>
                 <button 
                   onClick={() => { logout(); setIsOpen(false); }}
@@ -166,18 +184,20 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <button 
-                  onClick={() => { login(); setIsOpen(false); }}
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
                   className="w-full flex items-center justify-center gap-2 bg-transparent border border-border text-foreground px-6 py-3 rounded-xl font-bold transition-colors duration-300"
                 >
                   Log in
-                </button>
-                <button 
-                  onClick={() => { login(); setIsOpen(false); }}
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setIsOpen(false)}
                   className="w-full flex items-center justify-center gap-2 bg-foreground text-background px-6 py-3 rounded-xl font-bold transition-colors duration-300"
                 >
                   Sign up
-                </button>
+                </Link>
               </>
             )}
           </div>

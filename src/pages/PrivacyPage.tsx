@@ -43,13 +43,13 @@ export default function PrivacyPage() {
               Third-Party Services
             </h2>
             <p>
-              We use Google Gemini API for image generation and Supabase/S3 for data storage. These services have their own privacy policies and data handling practices. We do not sell your personal data to third parties.
+              We use OpenAI for image generation, Google Gemini for prompt-analysis helpers, and Supabase/S3 for data storage. These services have their own privacy policies and data handling practices. We do not sell your personal data to third parties.
             </p>
           </section>
 
           <section className="pt-8 border-t border-border">
             <p className="text-sm">
-              Last updated: April 8, 2026. If you have any questions about this Privacy Policy, please contact us at support@thumio.ai.
+              Last updated: April 8, 2026. If you have any questions about this Privacy Policy, please contact us at support@thumoraai.com.
             </p>
           </section>
         </div>

@@ -1,334 +1,465 @@
-import { useState, useEffect } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "motion/react";
-import { Play, Search, TrendingUp, Sparkles, Star, LayoutGrid, X, Music } from "lucide-react";
-import { listTemplates } from "../../services/storageService";
+import { AnimatePresence, motion } from "motion/react";
+import { LayoutTemplate, Search, Sparkles, Star, TrendingUp, X, type LucideIcon } from "lucide-react";
+import {
+  getPublicImagePreviewUrl,
+  listTemplates,
+  type TemplateAsset,
+} from "../../services/storageService";
+import { cn } from "../../lib/utils";
+import {
+  getTemplateCategoryLabel,
+  TEMPLATE_CATEGORY_OPTIONS,
+  type TemplateCategory,
+} from "../../lib/studioMetadata";
 
-interface Template {
-  key: string;
-  url: string;
-  lastModified: string;
-  category?: string;
-  isNew?: boolean;
-  isTrending?: boolean;
-  title?: string;
-  type?: string;
+type CategoryFilter = "all" | TemplateCategory;
+type StatusFilter = "all" | "new" | "trending" | "popular";
+
+const STATUS_FILTER_OPTIONS: Array<{ id: StatusFilter; label: string; icon: LucideIcon }> = [
+  { id: "all", label: "All", icon: LayoutTemplate },
+  { id: "new", label: "New", icon: Sparkles },
+  { id: "trending", label: "Trending", icon: TrendingUp },
+  { id: "popular", label: "Popular", icon: Star },
+];
+
+const TEMPLATE_CARD_PREVIEW_OPTIONS = {
+  width: 640,
+  height: 360,
+  resize: "contain",
+  quality: 72,
+} as const;
+
+const TEMPLATE_MODAL_PREVIEW_OPTIONS = {
+  width: 1280,
+  height: 720,
+  resize: "contain",
+  quality: 82,
+} as const;
+
+function getStatusBadge(template: TemplateAsset) {
+  if (template.isTrending) return { label: "Trending", icon: TrendingUp };
+  if (template.isPopular) return { label: "Popular", icon: Star };
+  if (template.isNew) return { label: "New", icon: Sparkles };
+  return null;
 }
 
-const categories = [
-  { id: 'request', label: 'Request', icon: null },
-  { id: 'drops', label: 'Drops', icon: null },
-  { id: 'all', label: 'All', icon: <LayoutGrid className="w-4 h-4" /> },
-  { id: 'education', label: 'Education', icon: null },
-  { id: 'how-to', label: 'How To', icon: null },
-  { id: 'blogs', label: 'Blogs', icon: null },
-  { id: 'tech', label: 'Tech', icon: null },
-  { id: 'gaming', label: 'Gaming', icon: null },
-  { id: 'entertainment', label: 'Entertainment', icon: null },
-  { id: 'sports', label: 'Sports', icon: null },
-  { id: 'travel', label: 'Travel', icon: null },
-  { id: 'tools', label: 'Tools', icon: null },
-];
-
-const templateTitles = [
-  "EXPOSED: $5,000+ AI Websites in 5 Minutes?!",
-  "Day Trading for Beginners: My SECRET to Start FAST!",
-  "Twitch or YouTube? One Choice Will Ruin Your Channel",
-  "How I Used AI to Make $10,000 as a Complete Beginner",
-  "My $10K App SECRET: AI + NO CODING!",
-  "How 10 videos changed my life and why you must start",
-  "Stop before it's too late: YouTube BANNED these niches",
-  "13 Yrs of NO BS Productivity: DITCH The Fluff (67 Mins)",
-  "How This 1 Hook Formula Will Blow Up Your Channel",
-  "This 1 thumbnail secret will blow up your content",
-  "23 ChatGPT Hacks So UNFAIR It's Cheating!",
-  "Every New Fortnite Collab Just Leaked (Mind-Blowing)",
-  "This Challenge Could KILL ME For $500,000!",
-  "Why the Black Ops 7 Beta is a complete disaster",
-  "The Most Shameless Valorant Gameplay You Will Ever See",
-  "AI Money HACK: ZERO Effort, Literally!",
-  "How to FINALLY Change Your Life (The Ultimate Guide)",
-  "I Tried AI Side Hustles for 30 Days (The Results)",
-  "The TRUTH About Making Money on YouTube in 2026",
-  "Stop Wasting Time: Do THIS Instead for 10x Growth",
-  "I Built a $100,000 Business in 24 Hours (No Money)",
-  "Why 99% of Creators Fail (And How to Be the 1%)",
-  "The Secret to Viral Content (It's Not What You Think)",
-  "How to Master Any Skill in 100 Hours (Proven Method)"
-];
-
-export default function TemplatesDashboard() {
-  const navigate = useNavigate();
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [activeTab, setActiveTab] = useState('new');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-
-  useEffect(() => {
-    async function fetchTemplates() {
-      try {
-        setError(null);
-        const data = await listTemplates();
-        
-        if (!data || data.length === 0) {
-          setError("No templates found in the 'thumbnails' bucket. Please ensure the bucket exists, is public, has files, and has a SELECT policy for public access. Also, ensure the bucket name is exactly 'thumbnails' (lowercase).");
-        }
-
-        // Map templates to hardcoded titles based on index to ensure consistency
-        const enrichedData = data.map((t: any, i: number) => ({
-          ...t,
-          category: categories[Math.floor(Math.random() * (categories.length - 3)) + 3].id,
-          isNew: i % 3 === 0,
-          isTrending: i % 2 === 0,
-          title: templateTitles[i % templateTitles.length]
-        }));
-        
-        setTemplates(enrichedData);
-        setLoading(false);
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message || "Failed to fetch templates. Check console for details.");
-        setLoading(false);
-      }
-    }
-    fetchTemplates();
-  }, []);
-
-  const handleUseStyle = (url: string) => {
-    navigate(`/studio/editor?templateUrl=${encodeURIComponent(url)}`);
-  };
-
-  const filteredTemplates = templates.filter(t => {
-    if (activeCategory !== 'all' && t.category !== activeCategory) return false;
-    if (activeTab === 'new' && !t.isNew) return false;
-    if (activeTab === 'trending' && !t.isTrending) return false;
-    if (searchQuery && !t.title?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+function filterByStatus(templates: TemplateAsset[], statusFilter: StatusFilter) {
+  return templates.filter((template) => {
+    if (statusFilter === "new") return template.isNew;
+    if (statusFilter === "trending") return template.isTrending;
+    if (statusFilter === "popular") return template.isPopular;
     return true;
   });
+}
+
+function matchesTemplateSearch(template: TemplateAsset, query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return true;
+
+  const haystacks = [
+    template.title,
+    template.category,
+    getTemplateCategoryLabel(template.category),
+    ...(template.tags ?? []),
+  ]
+    .filter(Boolean)
+    .map((value) => value.toLowerCase().replace(/-/g, " "));
+
+  return haystacks.some((value) => value.includes(normalizedQuery));
+}
+
+type TemplateCardProps = {
+  template: TemplateAsset;
+  onPreview: (template: TemplateAsset) => void;
+  onBroken: (templateId: string) => void;
+};
+
+function TemplateCard({ template, onPreview, onBroken }: TemplateCardProps) {
+  const statusBadge = getStatusBadge(template);
+  const previewUrl = getPublicImagePreviewUrl(template.url, TEMPLATE_CARD_PREVIEW_OPTIONS);
 
   return (
-    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto" dir="ltr">
-      {/* Header & Search */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <p className="text-muted-foreground text-xs sm:text-sm max-w-[300px]">Thumbnail designs added daily.</p>
-          <span className="inline-flex w-fit px-2 py-1 bg-muted/50 border border-border rounded-md text-[10px] sm:text-xs font-medium text-foreground whitespace-nowrap">✓ Use & sell freely</span>
-        </div>
-        
-        <div className="relative w-full lg:w-[400px]">
-          <div className={`flex items-center bg-[#1A1A1A] border rounded-xl overflow-hidden transition-colors ${isSearchFocused ? 'border-blue-500' : 'border-white/10'}`}>
-            <div className="pl-4 pr-2 text-muted-foreground">
-              <Search className="w-5 h-5" />
-            </div>
-            <input 
-              type="text" 
-              placeholder="Search thumbnail templates" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className="w-full bg-transparent border-none outline-none py-3 text-sm text-foreground placeholder:text-muted-foreground"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="pr-4 pl-2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+    <article className="group overflow-hidden rounded-lg border border-border/70 bg-card/40 transition-colors hover:border-foreground/20 hover:bg-card/60">
+      <div className="relative aspect-video overflow-hidden bg-muted/10">
+        <img
+          src={previewUrl}
+          alt={template.title}
+          className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+          loading="lazy"
+          decoding="async"
+          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+          onError={(event) => {
+            if (event.currentTarget.dataset.fallbackApplied === "true") {
+              onBroken(template.id);
+              return;
+            }
 
-          <AnimatePresence>
-            {isSearchFocused && !searchQuery && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
-              >
-                <div className="p-3">
-                  <div className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-muted-foreground tracking-wider uppercase">
-                    <TrendingUp className="w-3 h-3" /> Popular
-                  </div>
-                  {['education', 'tutorial', 'clickbait', 'dramatic', 'minimalist', 'ai', 'productivity', 'how-to'].map((term) => (
-                    <button 
-                      key={term}
-                      onClick={() => setSearchQuery(term)}
-                      className="w-full text-left px-3 py-2.5 text-sm font-medium text-white hover:bg-white/5 rounded-lg flex items-center gap-3 transition-colors"
-                    >
-                      <Search className="w-4 h-4 text-muted-foreground" /> {term}
-                    </button>
-                  ))}
-                </div>
-                <div className="bg-[#0A0A0A] border-t border-white/5 p-3 flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1"><span className="border border-white/10 rounded px-1.5 py-0.5">↑↓</span> Navigate</div>
-                  <div className="flex items-center gap-1"><span className="border border-white/10 rounded px-1.5 py-0.5">↵</span> Select</div>
-                  <div className="flex items-center gap-1"><span className="border border-white/10 rounded px-1.5 py-0.5">Esc</span> Close</div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide">
-        {categories.map((cat) => (
+            event.currentTarget.dataset.fallbackApplied = "true";
+            event.currentTarget.src = template.url;
+          }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 transition-opacity group-hover:opacity-100">
           <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              activeCategory === cat.id 
-                ? 'bg-foreground text-background' 
-                : 'bg-muted/30 border border-border text-muted-foreground hover:text-foreground'
-            }`}
+            type="button"
+            onClick={() => onPreview(template)}
+            className="rounded-lg bg-foreground px-4 py-2 text-sm font-bold text-background transition-opacity hover:opacity-90"
+            aria-label={`Preview and use ${template.title}`}
           >
-            {cat.icon}
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Featured Banner */}
-      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden mb-8 sm:mb-12 bg-gradient-to-r from-[#1a0b0b] to-[#3a1515] border border-red-900/30">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2000&auto=format&fit=crop')] opacity-20 mix-blend-overlay"></div>
-        <div className="relative z-10 p-6 sm:p-12 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
-          <div className="flex-1 max-w-xl text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-500/20 text-orange-500 rounded-full text-[10px] sm:text-xs font-bold mb-4 sm:mb-6">
-              <TrendingUp className="w-3 h-3" /> TRENDING #1
-            </div>
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight">
-              I made thumbnails in 5, 15, and 30 minutes
-            </h1>
-            <div className="flex justify-center lg:justify-start gap-2 mb-6 sm:mb-8">
-              <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] sm:text-xs text-white">Howto</span>
-              <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] sm:text-xs text-white">design</span>
-            </div>
-            <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
-              <button 
-                onClick={() => handleUseStyle('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop')}
-                className="px-6 py-3 bg-white text-black rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors text-sm sm:text-base"
-              >
-                <Play className="w-4 h-4 fill-black" /> Use Template
-              </button>
-              <button className="px-6 py-3 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-colors text-sm sm:text-base">
-                View Details
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 flex justify-center lg:justify-end w-full sm:w-auto">
-            <div className="w-full max-w-md aspect-video rounded-xl overflow-hidden border-4 border-white/10 shadow-2xl transform lg:rotate-2 hover:rotate-0 transition-transform duration-500">
-              <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop" alt="Featured" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border overflow-x-auto max-w-full no-scrollbar">
-          <button 
-            onClick={() => setActiveTab('new')}
-            className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 transition-colors whitespace-nowrap ${
-              activeTab === 'new' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> New
-          </button>
-          <button 
-            onClick={() => setActiveTab('trending')}
-            className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 transition-colors whitespace-nowrap ${
-              activeTab === 'trending' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <TrendingUp className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Trending
-          </button>
-          <button 
-            onClick={() => setActiveTab('popular')}
-            className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md flex items-center gap-2 transition-colors whitespace-nowrap ${
-              activeTab === 'popular' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Star className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Popular
+            Use
           </button>
         </div>
-        <button className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-          See all <span className="text-lg leading-none">›</span>
-        </button>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {loading ? (
-          <div className="col-span-full py-20 text-center text-muted-foreground">Loading templates...</div>
-        ) : error ? (
-          <div className="col-span-full py-10 flex flex-col items-center justify-center text-center">
-            <div className="bg-red-500/10 text-red-500 p-6 rounded-xl max-w-2xl border border-red-500/20">
-              <h3 className="font-bold mb-2 text-lg">Error Loading Templates</h3>
-              <p className="text-sm mb-4">{error}</p>
-              <div className="text-xs text-left bg-background/50 p-4 rounded-lg border border-red-500/10">
-                <p className="font-bold mb-2">Troubleshooting Supabase Storage RLS:</p>
-                <ol className="list-decimal pl-4 space-y-2">
-                  <li>Go to your Supabase Dashboard &gt; Storage &gt; Policies</li>
-                  <li>Find the <code>storage.objects</code> table.</li>
-                  <li>You likely have a policy that restricts access to the "owner". You need a fully public policy.</li>
-                  <li>Edit or Create a policy:
-                    <br/>- Action: <strong>SELECT</strong>
-                    <br/>- Target roles: <strong>public</strong> (or leave blank for all)
-                    <br/>- Policy definition: <code>bucket_id = 'thumbnails'</code>
-                    <br/>- <strong className="text-red-400">CRITICAL:</strong> Do NOT include <code>auth.uid() = owner</code> in the definition!
-                  </li>
-                </ol>
+      <div className="space-y-2.5 p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex rounded-md border border-border/70 bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground">
+            {getTemplateCategoryLabel(template.category)}
+          </span>
+          {statusBadge ? (
+            <span className="inline-flex items-center gap-1 rounded-md border border-border/70 bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground">
+              <statusBadge.icon className="h-3 w-3" />
+              {statusBadge.label}
+            </span>
+          ) : null}
+        </div>
+        <div>
+          <h3 className="line-clamp-2 text-base font-semibold text-foreground">{template.title}</h3>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+type TemplatePreviewPopupProps = {
+  template: TemplateAsset | null;
+  onClose: () => void;
+  onUse: (url: string) => void;
+};
+
+function TemplatePreviewPopup({ template, onClose, onUse }: TemplatePreviewPopupProps) {
+  useEffect(() => {
+    if (!template) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [template, onClose]);
+
+  const statusBadge = template ? getStatusBadge(template) : null;
+  const previewUrl = template ? getPublicImagePreviewUrl(template.url, TEMPLATE_MODAL_PREVIEW_OPTIONS) : "";
+
+  return (
+    <AnimatePresence>
+      {template ? (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-background/85 backdrop-blur-sm"
+          />
+
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="template-preview-title"
+            initial={{ opacity: 0, scale: 0.96, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 18 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            onClick={(event) => event.stopPropagation()}
+            className="relative z-[1] w-full max-w-5xl overflow-hidden rounded-lg border border-border bg-background shadow-[0_40px_120px_rgba(0,0,0,0.38)]"
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background/90 text-foreground transition-colors hover:bg-muted"
+              aria-label="Close preview"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="flex min-h-[300px] items-center justify-center bg-background">
+                <motion.div
+                  initial={{ clipPath: "inset(48% 0% 48% 0% round 8px)", scale: 0.98 }}
+                  animate={{ clipPath: "inset(0% 0% 0% 0% round 8px)", scale: 1 }}
+                  transition={{ duration: 0.38, ease: "easeOut" }}
+                  className="aspect-video w-full overflow-hidden"
+                >
+                  <img
+                    src={previewUrl}
+                    alt={template.title}
+                    className="h-full w-full object-contain"
+                    decoding="async"
+                    sizes="(min-width: 1024px) 960px, 100vw"
+                    onError={(event) => {
+                      if (event.currentTarget.dataset.fallbackApplied === "true") {
+                        return;
+                      }
+
+                      event.currentTarget.dataset.fallbackApplied = "true";
+                      event.currentTarget.src = template.url;
+                    }}
+                  />
+                </motion.div>
               </div>
-            </div>
-          </div>
-        ) : filteredTemplates.length > 0 ? (
-          filteredTemplates.map((template, index) => {
-            const isVideo = template.type?.startsWith('video/') || template.url.match(/\.(mp4|webm|ogg|mov)$/i);
-            const isAudio = template.type?.startsWith('audio/') || template.url.match(/\.(mp3|wav|m4a)$/i);
 
-            return (
-            <div key={template.key} className="group cursor-pointer">
-              <div className="aspect-video rounded-xl overflow-hidden mb-3 relative border border-border group-hover:border-accent transition-colors bg-muted/10 flex items-center justify-center">
-                {isVideo ? (
-                  <video src={template.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" autoPlay muted loop playsInline />
-                ) : isAudio ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground group-hover:scale-105 transition-transform duration-500">
-                    <Music className="w-8 h-8" />
-                    <span className="text-xs font-medium">Audio</span>
+              <div className="flex flex-col justify-between border-t border-border bg-card/60 p-5 lg:border-l lg:border-t-0 sm:p-6">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 pr-12 lg:pr-0">
+                    <span className="inline-flex rounded-md border border-border/70 bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                      {getTemplateCategoryLabel(template.category)}
+                    </span>
+                    {statusBadge ? (
+                      <span className="inline-flex items-center gap-1 rounded-md border border-border/70 bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                        <statusBadge.icon className="h-3 w-3" />
+                        {statusBadge.label}
+                      </span>
+                    ) : null}
                   </div>
-                ) : (
-                  <img src={template.url} alt="Template" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button 
-                    onClick={() => handleUseStyle(template.url)}
-                    className="px-4 py-2 bg-white text-black rounded-lg font-bold text-sm flex items-center gap-2"
+
+                  <h2 id="template-preview-title" className="mt-4 text-2xl font-bold leading-tight text-foreground">
+                    {template.title}
+                  </h2>
+
+                  {template.tags?.length ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {template.tags.slice(0, 5).map((tag) => (
+                        <span key={tag} className="rounded-md bg-background/70 px-2.5 py-1 text-xs text-muted-foreground">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="mt-6 grid gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUse(template.url)}
+                    className="inline-flex h-12 items-center justify-center rounded-lg bg-foreground px-5 text-sm font-bold text-background transition-opacity hover:opacity-90"
                   >
-                    <Play className="w-4 h-4 fill-black" /> Use
+                    Use template
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                  >
+                    Keep browsing
                   </button>
                 </div>
               </div>
-              <h3 className="font-bold text-foreground text-sm mb-1 line-clamp-2">{template.title}</h3>
-              <p className="text-xs text-muted-foreground">{template.category || 'youtube'} • {new Date(template.lastModified).toLocaleDateString()}</p>
             </div>
-          )})
-        ) : (
-          <div className="col-span-full py-20 text-center bg-muted/30 rounded-2xl border border-dashed border-border">
-            <p className="text-muted-foreground text-lg">No templates found for this filter.</p>
-            <button 
-              onClick={() => { setActiveCategory('all'); setActiveTab('popular'); }}
-              className="mt-4 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
-            >
-              Clear Filters
-            </button>
+          </motion.div>
+        </div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+export default function TemplatesDashboard() {
+  const navigate = useNavigate();
+  const [templates, setTemplates] = useState<TemplateAsset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [brokenTemplateIds, setBrokenTemplateIds] = useState<string[]>([]);
+  const [previewTemplate, setPreviewTemplate] = useState<TemplateAsset | null>(null);
+
+  async function fetchTemplates() {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await listTemplates();
+      setTemplates(data);
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to load library.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void fetchTemplates();
+  }, []);
+
+  const visibleTemplates = useMemo(() => {
+    return templates.filter((template) => !brokenTemplateIds.includes(template.id));
+  }, [brokenTemplateIds, templates]);
+
+  const searchFilteredTemplates = useMemo(() => {
+    return visibleTemplates.filter((template) => matchesTemplateSearch(template, searchQuery));
+  }, [searchQuery, visibleTemplates]);
+
+  const statusFilteredTemplates = useMemo(() => {
+    return filterByStatus(searchFilteredTemplates, statusFilter);
+  }, [searchFilteredTemplates, statusFilter]);
+
+  const filteredTemplates = useMemo(() => {
+    if (categoryFilter === "all") return statusFilteredTemplates;
+    return statusFilteredTemplates.filter((template) => template.category === categoryFilter);
+  }, [categoryFilter, statusFilteredTemplates]);
+
+  const groupedTemplates = useMemo(() => {
+    return TEMPLATE_CATEGORY_OPTIONS.map((category) => ({
+      category: category.id,
+      label: category.label,
+      templates: statusFilteredTemplates.filter((template) => template.category === category.id),
+    })).filter((group) => group.templates.length > 0);
+  }, [statusFilteredTemplates]);
+
+  const markTemplateAsBroken = (templateId: string) => {
+    setBrokenTemplateIds((current) => (current.includes(templateId) ? current : [...current, templateId]));
+  };
+
+  const handlePreviewTemplate = (template: TemplateAsset) => {
+    setPreviewTemplate(template);
+  };
+
+  const handleUseStyle = (url: string) => {
+    navigate(`/studio?templateUrl=${encodeURIComponent(url)}`);
+  };
+
+  return (
+    <div className="mx-auto max-w-[1600px] overflow-x-hidden px-3 py-4 sm:px-8 sm:py-7" dir="ltr">
+      <section className="mb-5 border-b border-border/70 pb-4 sm:mb-7 sm:pb-5">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <label className="flex h-11 w-full items-center gap-3 rounded-lg border border-border/70 bg-card/35 px-3 text-sm text-muted-foreground transition-colors focus-within:border-foreground/30 xl:max-w-xl">
+            <Search className="h-4 w-4 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search templates"
+              className="h-full w-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
+            />
+          </label>
+
+          <div className="no-scrollbar flex w-full max-w-full items-center gap-1.5 overflow-x-auto xl:w-auto">
+            {STATUS_FILTER_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setStatusFilter(option.id)}
+                className={cn(
+                  "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors",
+                  statusFilter === option.id
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/70 bg-card/35 text-muted-foreground hover:border-foreground/20 hover:text-foreground"
+                )}
+              >
+                <option.icon className="h-3.5 w-3.5" />
+                {option.label}
+              </button>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+
+        <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => setCategoryFilter("all")}
+            className={cn(
+              "h-9 shrink-0 rounded-lg border px-3 text-sm font-medium transition-colors",
+              categoryFilter === "all"
+                ? "border-foreground bg-foreground text-background"
+                : "border-border/70 bg-card/35 text-muted-foreground hover:border-foreground/20 hover:text-foreground"
+            )}
+          >
+            All categories
+          </button>
+          {TEMPLATE_CATEGORY_OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setCategoryFilter(option.id)}
+              className={cn(
+                "h-9 shrink-0 rounded-lg border px-3 text-sm font-medium transition-colors",
+                categoryFilter === option.id
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border/70 bg-card/35 text-muted-foreground hover:border-foreground/20 hover:text-foreground"
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {loading ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="animate-pulse overflow-hidden rounded-lg border border-border/70 bg-card/40">
+              <div className="aspect-video bg-muted" />
+              <div className="space-y-3 p-3">
+                <div className="h-4 w-24 rounded bg-muted" />
+                <div className="h-4 w-3/4 rounded bg-muted" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="rounded-lg border border-border/70 bg-card/50 py-12 text-center">
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <button onClick={() => void fetchTemplates()} className="mt-4 text-sm font-bold text-foreground underline">
+            Try Again
+          </button>
+        </div>
+      ) : categoryFilter === "all" ? (
+        <div className="space-y-10">
+          {groupedTemplates.map((group) => (
+            <section key={group.category}>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-semibold text-foreground">{group.label}</h2>
+                <span className="text-sm text-muted-foreground">{group.templates.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-6">
+                {group.templates.map((template) => (
+                  <Fragment key={template.id}>
+                    <TemplateCard template={template} onPreview={handlePreviewTemplate} onBroken={markTemplateAsBroken} />
+                  </Fragment>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-6">
+          {filteredTemplates.map((template) => (
+            <Fragment key={template.id}>
+              <TemplateCard template={template} onPreview={handlePreviewTemplate} onBroken={markTemplateAsBroken} />
+            </Fragment>
+          ))}
+        </div>
+      )}
+
+      {!loading && filteredTemplates.length === 0 && (
+        <div className="rounded-lg border border-dashed border-border/70 py-20 text-center">
+          <p className="text-muted-foreground">No templates found.</p>
+        </div>
+      )}
+
+      <TemplatePreviewPopup template={previewTemplate} onClose={() => setPreviewTemplate(null)} onUse={handleUseStyle} />
     </div>
   );
 }

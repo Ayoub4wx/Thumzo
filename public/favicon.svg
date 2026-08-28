@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Thumora AI favicon">
+  <rect width="64" height="64" rx="16" fill="#0a0a0a" />
+  <path
+    d="M18 18h28v8H36v20h-8V26H18z"
+    fill="#ffffff"
+  />
+  <circle cx="46" cy="18" r="6" fill="#ff4d1c" />
+</svg>

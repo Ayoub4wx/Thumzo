@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /admin/
+Disallow: /projects
+Disallow: /drafts
+Disallow: /studio
+Disallow: /templates
+Disallow: /tools
+Disallow: /assets
+Disallow: /settings
+Disallow: /login
+Disallow: /signup
+Disallow: /auth/
+Disallow: /bulk-edits
+Disallow: /docs
+Disallow: /api-docs
+
+Sitemap: https://www.thumoraai.com/sitemap.xml
